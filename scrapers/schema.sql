@@ -1,4 +1,4 @@
--- Schema do banco de pesquisas eleitorais
+-- Schema do banco de pesquisas eleitorais (v2)
 
 CREATE TABLE IF NOT EXISTS pesquisas (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS pesquisas (
     cenario TEXT NOT NULL,
     tipo TEXT,
     turno INTEGER DEFAULT 1,
+    metodologia TEXT,
+    votos_validos INTEGER DEFAULT 0,
     registro_tse TEXT,
     url_fonte TEXT,
     coletado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -29,5 +31,6 @@ CREATE TABLE IF NOT EXISTS resultados (
 
 CREATE INDEX IF NOT EXISTS idx_pesquisas_data ON pesquisas(data_fim_campo);
 CREATE INDEX IF NOT EXISTS idx_pesquisas_cenario ON pesquisas(cenario);
+CREATE INDEX IF NOT EXISTS idx_pesquisas_turno ON pesquisas(turno);
 CREATE INDEX IF NOT EXISTS idx_pesquisas_instituto ON pesquisas(instituto);
 CREATE INDEX IF NOT EXISTS idx_resultados_candidato ON resultados(candidato);
