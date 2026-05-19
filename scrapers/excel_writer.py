@@ -1,4 +1,4 @@
-"""Gera o Excel de saida com 4 abas."""
+"""Gera o Excel com múltiplas abas (uma por cenário) + abas de apoio."""
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -12,6 +12,7 @@ from openpyxl.chart import LineChart, Reference
 HEADER_FONT = Font(name="Arial", bold=True, color="FFFFFF", size=11)
 HEADER_FILL = PatternFill("solid", start_color="1F4E78")
 TITULO_FONT = Font(name="Arial", bold=True, size=14, color="1F4E78")
+SUBTITULO_FONT = Font(name="Arial", bold=True, size=11)
 THIN_BORDER = Border(
     left=Side(style="thin", color="CCCCCC"),
     right=Side(style="thin", color="CCCCCC"),
@@ -34,24 +35,27 @@ def _ajustar_larguras(ws, larguras):
         ws.column_dimensions[col_letra].width = largura
 
 
-def gerar_aba_media(wb, agregacao, candidatos):
-    ws = wb.create_sheet("Média Ponderada", 0)
-    ws["A1"] = "Agregador de Pesquisas — Eleições 2026"
+def gerar_aba_cenario(wb, nome_cenario, agregacao, pesquisas_brutas, pesos_institutos, config):
+    nome_aba = nome_cenario.replace("/", "-").replace(":", "-")[:31]
+    ws = wb.create_sheet(nome_aba)
+
+    ws["A1"] = f"Cenário: {nome_cenario}"
     ws["A1"].font = TITULO_FONT
-    ws.merge_cells("A1:D1")
+    ws.merge_cells("A1:F1")
 
     ws["A3"] = "Data de referência:"
     ws["B3"] = agregacao["data_referencia"].isoformat()
     ws["A4"] = "Pesquisas consideradas:"
     ws["B4"] = agregacao["n_pesquisas"]
-    ws["A5"] = "Cenário:"
-    ws["B5"] = "Lula vs Bolsonaro"
+    for cell in ["A3", "A4"]:
+        ws[cell].font = SUBTITULO_FONT
 
-    for cell in ["A3", "A4", "A5"]:
-        ws[cell].font = Font(name="Arial", bold=True)
+    candidatos = agregacao["candidatos"]
 
+    ws["A6"] = "MÉDIA PONDERADA"
+    ws["A6"].font = SUBTITULO_FONT
     ws["A7"] = "Candidato"
-    ws["B7"] = "Média Ponderada (%)"
+    ws["B7"] = "Média (%)"
     _formatar_cabecalho(ws, 7, 2)
 
     for i, candidato in enumerate(candidatos, start=8):
@@ -61,94 +65,75 @@ def gerar_aba_media(wb, agregacao, candidatos):
         c.number_format = "0.00"
         c.alignment = Alignment(horizontal="right")
 
-    _ajustar_larguras(ws, {"A": 28, "B": 22, "C": 18, "D": 18})
+    linha_inicio_lista = 9 + len(candidatos) + 2
+    ws.cell(row=linha_inicio_lista - 1, column=1, value="PESQUISAS UTILIZADAS").font = SUBTITULO_FONT
 
-
-def gerar_aba_pesquisas(wb, agregacao, candidatos):
-    ws = wb.create_sheet("Pesquisas")
     df = agregacao["detalhamento"]
-    if df.empty:
-        ws["A1"] = "Nenhuma pesquisa coletada ainda."
-        return
+    if not df.empty:
+        cols = ["instituto", "data_fim_campo", "amostra", "peso_final"] + candidatos
+        df = df[cols].copy().sort_values("data_fim_campo", ascending=False)
 
-    cols = ["instituto", "data_fim_campo", "amostra", "peso_final"] + candidatos
-    df = df[cols].copy()
-    df = df.sort_values("data_fim_campo", ascending=False)
+        for j, col in enumerate(cols, start=1):
+            ws.cell(row=linha_inicio_lista, column=j, value=col)
+        _formatar_cabecalho(ws, linha_inicio_lista, len(cols))
 
-    for j, col in enumerate(cols, start=1):
-        ws.cell(row=1, column=j, value=col)
-    _formatar_cabecalho(ws, 1, len(cols))
+        for i, row in enumerate(df.itertuples(index=False), start=linha_inicio_lista + 1):
+            for j, valor in enumerate(row, start=1):
+                c = ws.cell(row=i, column=j, value=valor)
+                c.font = Font(name="Arial")
+                c.border = THIN_BORDER
+                if isinstance(valor, float):
+                    c.number_format = "0.00"
 
-    for i, row in enumerate(df.itertuples(index=False), start=2):
-        for j, valor in enumerate(row, start=1):
-            c = ws.cell(row=i, column=j, value=valor)
-            c.font = Font(name="Arial")
-            c.border = THIN_BORDER
-            if isinstance(valor, float):
-                c.number_format = "0.00"
-
-    larguras = {get_column_letter(j): 16 for j in range(1, len(cols) + 1)}
-    larguras["A"] = 22
-    larguras["B"] = 16
+    larguras = {"A": 22, "B": 16}
+    for j in range(3, len(candidatos) + 5):
+        larguras[get_column_letter(j)] = 14
     _ajustar_larguras(ws, larguras)
 
 
-def gerar_aba_historico(wb, pesquisas_brutas, pesos_institutos, config, candidatos):
-    from scrapers.ponderacao import agregar
+def gerar_aba_todas_pesquisas(wb, todas_pesquisas):
+    ws = wb.create_sheet("Todas as Pesquisas")
 
-    ws = wb.create_sheet("Histórico Diário")
-
-    hoje = date.today()
-    inicio = hoje - timedelta(days=90)
-    janela = config["ponderacao"]["janela_dias"]
-
-    linhas = []
-    cursor = inicio
-    while cursor <= hoje:
-        pesquisas_validas = [
-            p for p in pesquisas_brutas
-            if date.fromisoformat(str(p["data_fim_campo"])) <= cursor
-            and (cursor - date.fromisoformat(str(p["data_fim_campo"]))).days <= janela
-        ]
-        if pesquisas_validas:
-            ag = agregar(pesquisas_validas, pesos_institutos, config, candidatos, cursor)
-            linha = {"data": cursor.isoformat(), "n_pesquisas": ag["n_pesquisas"]}
-            linha.update({c: round(ag["medias"].get(c, 0), 2) for c in candidatos})
-            linhas.append(linha)
-        cursor += timedelta(days=1)
-
-    if not linhas:
-        ws["A1"] = "Sem dados históricos suficientes."
+    if not todas_pesquisas:
+        ws["A1"] = "Nenhuma pesquisa no banco."
         return
 
-    cols = ["data", "n_pesquisas"] + candidatos
+    candidatos_set = set()
+    for p in todas_pesquisas:
+        candidatos_set.update(p.get("resultados", {}).keys())
+    especiais = ["Outros", "Branco/Nulo", "Não sabe"]
+    candidatos = sorted([c for c in candidatos_set if c not in especiais])
+    candidatos += [c for c in especiais if c in candidatos_set]
+
+    cols_meta = [
+        "cenario", "instituto", "contratante", "data_inicio_campo",
+        "data_fim_campo", "amostra", "margem_erro", "turno",
+        "metodologia", "votos_validos", "registro_tse", "url_fonte",
+    ]
+    cols = cols_meta + candidatos
+
     for j, col in enumerate(cols, start=1):
         ws.cell(row=1, column=j, value=col)
     _formatar_cabecalho(ws, 1, len(cols))
 
-    for i, l in enumerate(linhas, start=2):
-        for j, col in enumerate(cols, start=1):
-            c = ws.cell(row=i, column=j, value=l[col])
+    for i, p in enumerate(todas_pesquisas, start=2):
+        for j, col in enumerate(cols_meta, start=1):
+            c = ws.cell(row=i, column=j, value=p.get(col))
             c.font = Font(name="Arial")
-            if isinstance(l[col], float):
+            c.border = THIN_BORDER
+        for j, cand in enumerate(candidatos, start=len(cols_meta) + 1):
+            val = p.get("resultados", {}).get(cand)
+            c = ws.cell(row=i, column=j, value=val)
+            c.font = Font(name="Arial")
+            c.border = THIN_BORDER
+            if val is not None:
                 c.number_format = "0.00"
 
-    chart = LineChart()
-    chart.title = "Evolução da média ponderada"
-    chart.y_axis.title = "Intenção de voto (%)"
-    chart.x_axis.title = "Data"
-    chart.height = 10
-    chart.width = 20
-
-    n_linhas = len(linhas) + 1
-    for j, candidato in enumerate(candidatos, start=3):
-        data = Reference(ws, min_col=j, min_row=1, max_row=n_linhas)
-        chart.add_data(data, titles_from_data=True)
-    cats = Reference(ws, min_col=1, min_row=2, max_row=n_linhas)
-    chart.set_categories(cats)
-    ws.add_chart(chart, f"{get_column_letter(len(cols) + 2)}2")
-
     larguras = {get_column_letter(j): 14 for j in range(1, len(cols) + 1)}
+    larguras["A"] = 22
+    larguras["B"] = 18
+    larguras["C"] = 18
+    larguras["L"] = 16
     _ajustar_larguras(ws, larguras)
 
 
@@ -172,14 +157,8 @@ def gerar_aba_config(wb, config, pesos_institutos):
     linha += 2
     ws.cell(row=linha, column=1, value="Parâmetros da ponderação").font = TITULO_FONT
     linha += 2
-    ws.cell(row=linha, column=1, value="Recência ativa")
-    ws.cell(row=linha, column=2, value=config["ponderacao"]["recencia"]["ativo"])
-    linha += 1
     ws.cell(row=linha, column=1, value="Half-life (dias)")
     ws.cell(row=linha, column=2, value=config["ponderacao"]["recencia"]["half_life_dias"])
-    linha += 1
-    ws.cell(row=linha, column=1, value="Amostra ativa")
-    ws.cell(row=linha, column=2, value=config["ponderacao"]["amostra"]["ativo"])
     linha += 1
     ws.cell(row=linha, column=1, value="Amostra de referência")
     ws.cell(row=linha, column=2, value=config["ponderacao"]["amostra"]["amostra_referencia"])
@@ -187,17 +166,78 @@ def gerar_aba_config(wb, config, pesos_institutos):
     ws.cell(row=linha, column=1, value="Janela de pesquisas (dias)")
     ws.cell(row=linha, column=2, value=config["ponderacao"]["janela_dias"])
 
-    _ajustar_larguras(ws, {"A": 30, "B": 16})
+    linha += 2
+    ws.cell(row=linha, column=1, value="Cenários ativos").font = TITULO_FONT
+    linha += 2
+    ws.cell(row=linha, column=1, value="Cenário")
+    ws.cell(row=linha, column=2, value="Turno")
+    ws.cell(row=linha, column=3, value="Candidatos exigidos")
+    _formatar_cabecalho(ws, linha, 3)
+    linha += 1
+    for cen in config["cenarios"]:
+        ws.cell(row=linha, column=1, value=cen["nome"])
+        ws.cell(row=linha, column=2, value=cen["turno"])
+        filtro = cen.get("filtro_candidatos") or []
+        ws.cell(row=linha, column=3, value=", ".join(filtro) if filtro else "(todos)")
+        linha += 1
+
+    _ajustar_larguras(ws, {"A": 30, "B": 16, "C": 30})
 
 
-def gerar_excel(caminho, agregacao, pesquisas_brutas, pesos_institutos, config, candidatos):
+def gerar_aba_resumo(wb, agregacoes_por_cenario):
+    ws = wb.create_sheet("Resumo", 0)
+    ws["A1"] = "Agregador de Pesquisas — Eleições 2026"
+    ws["A1"].font = TITULO_FONT
+    ws.merge_cells("A1:E1")
+
+    ws["A3"] = "Resumo por cenário"
+    ws["A3"].font = SUBTITULO_FONT
+
+    linha = 5
+    for nome_cenario, ag in agregacoes_por_cenario.items():
+        ws.cell(row=linha, column=1, value=nome_cenario).font = Font(name="Arial", bold=True, size=12)
+        ws.cell(row=linha, column=2, value=f"{ag['n_pesquisas']} pesquisas").font = Font(name="Arial", italic=True)
+        linha += 1
+
+        if ag["n_pesquisas"] == 0:
+            ws.cell(row=linha, column=1, value="(sem dados)").font = Font(name="Arial", italic=True, color="888888")
+            linha += 2
+            continue
+
+        for c in ag["candidatos"]:
+            ws.cell(row=linha, column=1, value=c).font = Font(name="Arial")
+            cell = ws.cell(row=linha, column=2, value=round(ag["medias"].get(c, 0), 2))
+            cell.font = Font(name="Arial")
+            cell.number_format = "0.00"
+            cell.alignment = Alignment(horizontal="right")
+            linha += 1
+        linha += 1
+
+    _ajustar_larguras(ws, {"A": 28, "B": 18})
+
+
+def gerar_excel(
+    caminho,
+    agregacoes_por_cenario,
+    todas_pesquisas,
+    pesos_institutos,
+    config,
+    pesquisas_por_cenario,
+):
     Path(caminho).parent.mkdir(parents=True, exist_ok=True)
     wb = Workbook()
     wb.remove(wb.active)
 
-    gerar_aba_media(wb, agregacao, candidatos)
-    gerar_aba_pesquisas(wb, agregacao, candidatos)
-    gerar_aba_historico(wb, pesquisas_brutas, pesos_institutos, config, candidatos)
+    gerar_aba_resumo(wb, agregacoes_por_cenario)
+
+    for nome_cenario, ag in agregacoes_por_cenario.items():
+        gerar_aba_cenario(
+            wb, nome_cenario, ag,
+            pesquisas_por_cenario.get(nome_cenario, []),
+            pesos_institutos, config,
+        )
+
+    gerar_aba_todas_pesquisas(wb, todas_pesquisas)
     gerar_aba_config(wb, config, pesos_institutos)
 
     wb.save(caminho)
