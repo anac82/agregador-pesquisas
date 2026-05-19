@@ -1,6 +1,1 @@
-instituto,contratante,data_inicio_campo,data_fim_campo,amostra,margem_erro,cenario,tipo,registro_tse,url_fonte,Lula,Bolsonaro,Branco/Nulo,Não sabe
-Datafolha,Folha de S.Paulo,2026-04-09,2026-04-10,2010,2,Lula vs Bolsonaro,estimulada,,https://www.cnnbrasil.com.br/eleicoes/datafolha-2o-turno-lula-perde-vantagem-e-empata-com-flavio-caiado-e-zema/,45,46,8,1
-AtlasIntel,Bloomberg,2026-02-24,2026-02-27,5710,1,Lula vs Bolsonaro,estimulada,,https://menafn.com/1109290870/,47,49,3,1
-AtlasIntel,Bloomberg,2026-01-19,2026-01-21,2900,2,Lula vs Bolsonaro,estimulada,,https://www.cnnbrasil.com.br/blogs/iuri-pitta/eleicoes/atlas-lula-venceria-flavio-tarcisio-ou-michelle-no-2o-turno-por-4-pontos/,49,45,5,1
-Quaest,Genial,2026-03-28,2026-04-01,2004,2,Lula vs Bolsonaro,estimulada,,https://congressoemfoco.com.br/tag/eleicoes-2026,46,42,10,2
-Datafolha,Folha de S.Paulo,2026-02-12,2026-02-14,2010,2,Lula vs Bolsonaro,estimulada,,https://www.folha.uol.com.br/,47,44,7,2
+instituto,contratante,data_inicio_campo,data_fim_campo,amostra,margem_erro,intervalo_confianca,turno,tipo,metodologia,votos_validos,registro_tse,url_fonte,Lula,Flávio,Zema,Tarcísio,Michelle,Caiado,Marçal,Tebet,Outros,Branco/Nulo,Não sabe
