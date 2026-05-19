@@ -1,0 +1,30 @@
+# =============================================================================
+# CONFIGURAÇÃO DO AGREGADOR DE PESQUISAS
+# =============================================================================
+
+# --- CENÁRIO ATIVO ---
+cenario_ativo: "Lula vs Bolsonaro"
+
+# --- CANDIDATOS DO CENÁRIO ---
+candidatos:
+  - Lula
+  - Bolsonaro
+  - Branco/Nulo
+  - Não sabe
+
+# --- PARÂMETROS DA PONDERAÇÃO ---
+ponderacao:
+  recencia:
+    ativo: true
+    half_life_dias: 30
+
+  amostra:
+    ativo: true
+    amostra_referencia: 2000
+
+  janela_dias: 180
+
+# --- SAÍDA ---
+saida:
+  arquivo_excel: "output/agregador_pesquisas.xlsx"
+  banco_sqlite: "data/pesquisas.db"
