@@ -1,16 +1,29 @@
 # =============================================================================
-# CONFIGURAÇÃO DO AGREGADOR DE PESQUISAS
+# CONFIGURAÇÃO DO AGREGADOR DE PESQUISAS (v2)
 # =============================================================================
 
-# --- CENÁRIO ATIVO ---
-cenario_ativo: "Lula vs Bolsonaro"
+# --- CENÁRIOS ATIVOS ---
+# Cada cenário tem:
+#   nome: como aparece no Excel (nome da aba)
+#   turno: 1 ou 2
+#   filtro_candidatos: (só pra 2º turno) lista de 2 candidatos que devem
+#                      estar presentes na pesquisa
+cenarios:
+  - nome: "1º Turno"
+    turno: 1
+    filtro_candidatos: []
 
-# --- CANDIDATOS DO CENÁRIO ---
-candidatos:
-  - Lula
-  - Bolsonaro
-  - Branco/Nulo
-  - Não sabe
+  - nome: "Lula vs Flávio"
+    turno: 2
+    filtro_candidatos: ["Lula", "Flávio"]
+
+  - nome: "Lula vs Zema"
+    turno: 2
+    filtro_candidatos: ["Lula", "Zema"]
+
+  - nome: "Flávio vs Zema"
+    turno: 2
+    filtro_candidatos: ["Flávio", "Zema"]
 
 # --- PARÂMETROS DA PONDERAÇÃO ---
 ponderacao:
