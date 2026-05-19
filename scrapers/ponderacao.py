@@ -6,7 +6,7 @@ import pandas as pd
 
 
 def calcular_peso_recencia(
-    data_fim_campo: date,
+    data_fim_campo,
     data_referencia: date,
     half_life_dias: float = 30.0,
 ) -> float:
@@ -54,27 +54,38 @@ def agregar(
     pesquisas: list,
     pesos_institutos: dict,
     config: dict,
-    candidatos: list,
     data_referencia: Optional[date] = None,
 ) -> dict:
+    """
+    Agrega uma lista de pesquisas. Diferente da v1: descobre os candidatos
+    automaticamente unindo o que apareceu nas pesquisas.
+    """
     if data_referencia is None:
         data_referencia = date.today()
 
     if not pesquisas:
         return {
-            "medias": {c: 0.0 for c in candidatos},
+            "medias": {},
+            "candidatos": [],
             "n_pesquisas": 0,
             "data_referencia": data_referencia,
             "detalhamento": pd.DataFrame(),
         }
 
+    candidatos_set = set()
+    for p in pesquisas:
+        candidatos_set.update(p["resultados"].keys())
+
+    especiais = ["Outros", "Branco/Nulo", "Não sabe"]
+    principais = sorted([c for c in candidatos_set if c not in especiais])
+    candidatos = principais + [c for c in especiais if c in candidatos_set]
+
     linhas = []
-    soma_pesos = 0.0
+    soma_pesos_por_cand = {c: 0.0 for c in candidatos}
     soma_ponderada = {c: 0.0 for c in candidatos}
 
     for p in pesquisas:
         peso = calcular_peso_final(p, pesos_institutos, config, data_referencia)
-        soma_pesos += peso
 
         linha = {
             "instituto": p["instituto"],
@@ -83,18 +94,25 @@ def agregar(
             "peso_final": peso,
         }
         for c in candidatos:
-            valor = p["resultados"].get(c, 0.0)
-            soma_ponderada[c] += valor * peso
-            linha[c] = valor
+            valor = p["resultados"].get(c)
+            if valor is not None:
+                soma_ponderada[c] += valor * peso
+                soma_pesos_por_cand[c] += peso
+                linha[c] = valor
+            else:
+                linha[c] = None
         linhas.append(linha)
 
-    if soma_pesos == 0:
-        medias = {c: 0.0 for c in candidatos}
-    else:
-        medias = {c: soma_ponderada[c] / soma_pesos for c in candidatos}
+    medias = {}
+    for c in candidatos:
+        if soma_pesos_por_cand[c] > 0:
+            medias[c] = soma_ponderada[c] / soma_pesos_por_cand[c]
+        else:
+            medias[c] = 0.0
 
     return {
         "medias": medias,
+        "candidatos": candidatos,
         "n_pesquisas": len(pesquisas),
         "data_referencia": data_referencia,
         "detalhamento": pd.DataFrame(linhas),
