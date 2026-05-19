@@ -131,4 +131,74 @@ def gerar_aba_historico(wb, pesquisas_brutas, pesos_institutos, config, candidat
             c = ws.cell(row=i, column=j, value=l[col])
             c.font = Font(name="Arial")
             if isinstance(l[col], float):
-                c.number_forma
+                c.number_format = "0.00"
+
+    chart = LineChart()
+    chart.title = "Evolução da média ponderada"
+    chart.y_axis.title = "Intenção de voto (%)"
+    chart.x_axis.title = "Data"
+    chart.height = 10
+    chart.width = 20
+
+    n_linhas = len(linhas) + 1
+    for j, candidato in enumerate(candidatos, start=3):
+        data = Reference(ws, min_col=j, min_row=1, max_row=n_linhas)
+        chart.add_data(data, titles_from_data=True)
+    cats = Reference(ws, min_col=1, min_row=2, max_row=n_linhas)
+    chart.set_categories(cats)
+    ws.add_chart(chart, f"{get_column_letter(len(cols) + 2)}2")
+
+    larguras = {get_column_letter(j): 14 for j in range(1, len(cols) + 1)}
+    _ajustar_larguras(ws, larguras)
+
+
+def gerar_aba_config(wb, config, pesos_institutos):
+    ws = wb.create_sheet("Configuração")
+    ws["A1"] = "Pesos por instituto"
+    ws["A1"].font = TITULO_FONT
+
+    ws["A3"] = "Instituto"
+    ws["B3"] = "Peso"
+    _formatar_cabecalho(ws, 3, 2)
+
+    linha = 4
+    for inst, peso in sorted(pesos_institutos.items()):
+        ws.cell(row=linha, column=1, value=inst).font = Font(name="Arial")
+        c = ws.cell(row=linha, column=2, value=peso)
+        c.font = Font(name="Arial")
+        c.number_format = "0.00"
+        linha += 1
+
+    linha += 2
+    ws.cell(row=linha, column=1, value="Parâmetros da ponderação").font = TITULO_FONT
+    linha += 2
+    ws.cell(row=linha, column=1, value="Recência ativa")
+    ws.cell(row=linha, column=2, value=config["ponderacao"]["recencia"]["ativo"])
+    linha += 1
+    ws.cell(row=linha, column=1, value="Half-life (dias)")
+    ws.cell(row=linha, column=2, value=config["ponderacao"]["recencia"]["half_life_dias"])
+    linha += 1
+    ws.cell(row=linha, column=1, value="Amostra ativa")
+    ws.cell(row=linha, column=2, value=config["ponderacao"]["amostra"]["ativo"])
+    linha += 1
+    ws.cell(row=linha, column=1, value="Amostra de referência")
+    ws.cell(row=linha, column=2, value=config["ponderacao"]["amostra"]["amostra_referencia"])
+    linha += 1
+    ws.cell(row=linha, column=1, value="Janela de pesquisas (dias)")
+    ws.cell(row=linha, column=2, value=config["ponderacao"]["janela_dias"])
+
+    _ajustar_larguras(ws, {"A": 30, "B": 16})
+
+
+def gerar_excel(caminho, agregacao, pesquisas_brutas, pesos_institutos, config, candidatos):
+    Path(caminho).parent.mkdir(parents=True, exist_ok=True)
+    wb = Workbook()
+    wb.remove(wb.active)
+
+    gerar_aba_media(wb, agregacao, candidatos)
+    gerar_aba_pesquisas(wb, agregacao, candidatos)
+    gerar_aba_historico(wb, pesquisas_brutas, pesos_institutos, config, candidatos)
+    gerar_aba_config(wb, config, pesos_institutos)
+
+    wb.save(caminho)
+    return caminho
