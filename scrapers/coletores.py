@@ -1,6 +1,13 @@
-"""Coletores de pesquisas eleitorais."""
+"""Coletores de pesquisas eleitorais (v2)."""
 import csv
 from pathlib import Path
+
+
+META_COLS = {
+    "instituto", "contratante", "data_inicio_campo", "data_fim_campo",
+    "amostra", "margem_erro", "intervalo_confianca", "turno", "tipo",
+    "metodologia", "votos_validos", "registro_tse", "url_fonte",
+}
 
 
 def coletar_do_csv_manual(arquivo_csv: str) -> list:
@@ -10,21 +17,20 @@ def coletar_do_csv_manual(arquivo_csv: str) -> list:
     pesquisas = []
     with open(arquivo_csv, encoding="utf-8") as f:
         reader = csv.DictReader(f)
-        meta_cols = {
-            "instituto", "contratante", "data_inicio_campo", "data_fim_campo",
-            "amostra", "margem_erro", "cenario", "tipo", "registro_tse",
-            "url_fonte",
-        }
         for row in reader:
             if not row.get("instituto"):
                 continue
+
             resultados = {}
             for k, v in row.items():
-                if k not in meta_cols and v:
+                if k not in META_COLS and v not in (None, ""):
                     try:
                         resultados[k] = float(str(v).replace(",", "."))
                     except (ValueError, AttributeError):
                         pass
+
+            if not resultados:
+                continue
 
             pesquisas.append({
                 "instituto": row["instituto"].strip(),
@@ -33,8 +39,11 @@ def coletar_do_csv_manual(arquivo_csv: str) -> list:
                 "data_fim_campo": row["data_fim_campo"],
                 "amostra": int(row["amostra"]),
                 "margem_erro": float(row["margem_erro"]) if row.get("margem_erro") else None,
-                "cenario": row.get("cenario", "Lula vs Bolsonaro"),
+                "intervalo_confianca": float(row["intervalo_confianca"]) if row.get("intervalo_confianca") else 95.0,
+                "turno": int(row.get("turno", 1)) if row.get("turno") else 1,
                 "tipo": row.get("tipo", "estimulada"),
+                "metodologia": row.get("metodologia", "").strip() or None,
+                "votos_validos": int(row["votos_validos"]) if row.get("votos_validos") else 0,
                 "registro_tse": row.get("registro_tse", "").strip() or None,
                 "url_fonte": row.get("url_fonte", "").strip() or None,
                 "resultados": resultados,
