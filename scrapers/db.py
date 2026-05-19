@@ -1,4 +1,4 @@
-"""Camada de banco de dados."""
+"""Camada de banco de dados (v2)."""
 import sqlite3
 import hashlib
 from pathlib import Path
@@ -19,23 +19,63 @@ def get_connection(db_path: str) -> sqlite3.Connection:
 def gerar_hash_pesquisa(
     instituto: str,
     data_fim_campo: str,
-    cenario: str,
+    turno: int,
     amostra: int,
+    candidatos_str: str = "",
     registro_tse: Optional[str] = None,
 ) -> str:
     if registro_tse:
-        chave = f"TSE:{registro_tse}"
+        chave = f"TSE:{registro_tse}|T{turno}|{candidatos_str}"
     else:
-        chave = f"{instituto}|{data_fim_campo}|{cenario}|{amostra}"
+        chave = f"{instituto}|{data_fim_campo}|T{turno}|{amostra}|{candidatos_str}"
     return hashlib.sha256(chave.encode("utf-8")).hexdigest()[:16]
 
 
-def inserir_pesquisa(conn: sqlite3.Connection, pesquisa: dict) -> Optional[int]:
+def classificar_cenario(pesquisa: dict, cenarios_config: list) -> Optional[str]:
+    """
+    Decide a qual cenário uma pesquisa pertence, baseado em turno + candidatos.
+    """
+    turno = int(pesquisa.get("turno", 1))
+    resultados = pesquisa.get("resultados", {})
+
+    candidatos_reais = [
+        c for c, v in resultados.items()
+        if v and v > 0 and c not in ("Branco/Nulo", "Não sabe", "Outros")
+    ]
+
+    if turno == 1:
+        for cen in cenarios_config:
+            if cen["turno"] == 1:
+                return cen["nome"]
+        return None
+
+    for cen in cenarios_config:
+        if cen["turno"] != 2:
+            continue
+        filtro = set(cen.get("filtro_candidatos") or [])
+        if not filtro:
+            continue
+        if filtro.issubset(set(candidatos_reais)) and len(candidatos_reais) <= 2:
+            return cen["nome"]
+    return None
+
+
+def inserir_pesquisa(
+    conn: sqlite3.Connection,
+    pesquisa: dict,
+    cenarios_config: list,
+) -> Optional[int]:
+    cenario = classificar_cenario(pesquisa, cenarios_config)
+    if cenario is None:
+        return None
+
+    candidatos_str = ",".join(sorted(pesquisa["resultados"].keys()))
     hash_unico = gerar_hash_pesquisa(
         pesquisa["instituto"],
         pesquisa["data_fim_campo"],
-        pesquisa["cenario"],
+        int(pesquisa.get("turno", 1)),
         pesquisa["amostra"],
+        candidatos_str,
         pesquisa.get("registro_tse"),
     )
 
@@ -49,9 +89,9 @@ def inserir_pesquisa(conn: sqlite3.Connection, pesquisa: dict) -> Optional[int]:
         """
         INSERT INTO pesquisas (
             instituto, contratante, data_inicio_campo, data_fim_campo,
-            amostra, margem_erro, intervalo_confianca, cenario, tipo,
-            turno, registro_tse, url_fonte, hash_unico
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            amostra, margem_erro, intervalo_confianca, cenario, tipo, turno,
+            metodologia, votos_validos, registro_tse, url_fonte, hash_unico
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             pesquisa["instituto"],
@@ -61,9 +101,11 @@ def inserir_pesquisa(conn: sqlite3.Connection, pesquisa: dict) -> Optional[int]:
             pesquisa["amostra"],
             pesquisa.get("margem_erro"),
             pesquisa.get("intervalo_confianca", 95.0),
-            pesquisa["cenario"],
+            cenario,
             pesquisa.get("tipo", "estimulada"),
-            pesquisa.get("turno", 1),
+            int(pesquisa.get("turno", 1)),
+            pesquisa.get("metodologia"),
+            int(pesquisa.get("votos_validos", 0)),
             pesquisa.get("registro_tse"),
             pesquisa.get("url_fonte"),
             hash_unico,
@@ -72,6 +114,8 @@ def inserir_pesquisa(conn: sqlite3.Connection, pesquisa: dict) -> Optional[int]:
     pesquisa_id = cursor.lastrowid
 
     for candidato, percentual in pesquisa["resultados"].items():
+        if percentual is None:
+            continue
         conn.execute(
             "INSERT INTO resultados (pesquisa_id, candidato, percentual) VALUES (?, ?, ?)",
             (pesquisa_id, candidato, percentual),
@@ -85,7 +129,7 @@ def listar_pesquisas(
     conn: sqlite3.Connection,
     cenario: str,
     desde: Optional[date] = None,
-) -> list[dict]:
+) -> list:
     query = "SELECT * FROM pesquisas WHERE cenario = ?"
     params: list = [cenario]
     if desde:
