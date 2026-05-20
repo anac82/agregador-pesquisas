@@ -1,5 +1,4 @@
 name: Agregador de pesquisas
-
 on:
   schedule:
     - cron: '0 12 * * *'
@@ -10,42 +9,35 @@ on:
       - 'data/config.yaml'
       - 'scrapers/**'
   workflow_dispatch:
-
 permissions:
   contents: write
-
 jobs:
   agregar:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: 'pip'
-
       - name: Instalar dependências
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
-
       - name: Rodar agregador
         run: python -m scrapers.main
-
       - name: Disponibilizar Excel para download
         uses: actions/upload-artifact@v4
         with:
           name: agregador-pesquisas-excel
           path: output/agregador_pesquisas.xlsx
           retention-days: 90
-
-      - name: Commitar Excel e banco atualizados
+      - name: Commitar Excel, banco e página atualizados
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add output/agregador_pesquisas.xlsx data/pesquisas.db
+          git add output/agregador_pesquisas.xlsx data/pesquisas.db docs/index.html
           git diff --staged --quiet || git commit -m "Atualização automática $(date +%Y-%m-%d)"
           git push
