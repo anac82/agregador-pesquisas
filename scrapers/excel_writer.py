@@ -91,6 +91,96 @@ def gerar_aba_cenario(wb, nome_cenario, agregacao, pesquisas_brutas, pesos_insti
     _ajustar_larguras(ws, larguras)
 
 
+def gerar_aba_evolucao(wb, nome_cenario, serie, top_n=6):
+    """
+    Cria uma aba com a série temporal (média móvel ponderada) e um gráfico
+    de linha mostrando a evolução dos principais candidatos ao longo do tempo.
+
+    `serie` é o dict retornado por ponderacao.agregar_serie_temporal().
+    """
+    nome_aba = f"Evolução {nome_cenario}".replace("/", "-").replace(":", "-")[:31]
+    ws = wb.create_sheet(nome_aba)
+
+    ws["A1"] = f"Evolução temporal — {nome_cenario}"
+    ws["A1"].font = TITULO_FONT
+    ws.merge_cells("A1:H1")
+
+    pontos = serie.get("pontos", [])
+    if not pontos:
+        ws["A3"] = "(sem dados para gerar a série temporal)"
+        ws["A3"].font = Font(name="Arial", italic=True, color="888888")
+        return
+
+    ws["A3"] = f"Janela: {serie['janela_dias']} dias | Passo: {serie['passo_dias']} dias"
+    ws["A3"].font = Font(name="Arial", italic=True, size=10, color="666666")
+
+    # Escolher os top_n candidatos pela média mais recente com dados
+    medias_recentes = {}
+    for pt in reversed(pontos):
+        if pt["n_pesquisas"] > 0:
+            medias_recentes = pt["medias"]
+            break
+    especiais = {"Outros", "Branco/Nulo", "Não sabe"}
+    candidatos_ordenados = sorted(
+        [c for c in serie["candidatos"] if c not in especiais],
+        key=lambda c: medias_recentes.get(c, 0),
+        reverse=True,
+    )
+    candidatos_grafico = candidatos_ordenados[:top_n]
+
+    # Tabela: linha de cabeçalho (Data + candidatos)
+    linha_cab = 5
+    ws.cell(row=linha_cab, column=1, value="Data")
+    ws.cell(row=linha_cab, column=2, value="Nº pesq.")
+    for j, cand in enumerate(candidatos_grafico, start=3):
+        ws.cell(row=linha_cab, column=j, value=cand)
+    _formatar_cabecalho(ws, linha_cab, 2 + len(candidatos_grafico))
+
+    # Linhas de dados
+    primeira_dado = linha_cab + 1
+    linha = primeira_dado
+    for pt in pontos:
+        ws.cell(row=linha, column=1, value=pt["data"].isoformat()).font = Font(name="Arial")
+        ws.cell(row=linha, column=2, value=pt["n_pesquisas"]).font = Font(name="Arial")
+        for j, cand in enumerate(candidatos_grafico, start=3):
+            val = pt["medias"].get(cand)
+            c = ws.cell(row=linha, column=j, value=round(val, 2) if val else None)
+            c.font = Font(name="Arial")
+            if val:
+                c.number_format = "0.00"
+        linha += 1
+    ultima_dado = linha - 1
+
+    # Gráfico de linha
+    chart = LineChart()
+    chart.title = f"Intenção de voto — {nome_cenario}"
+    chart.style = 12
+    chart.y_axis.title = "% intenção de voto"
+    chart.x_axis.title = "Data"
+    chart.height = 10
+    chart.width = 22
+
+    dados = Reference(ws, min_col=3, max_col=2 + len(candidatos_grafico),
+                      min_row=linha_cab, max_row=ultima_dado)
+    categorias = Reference(ws, min_col=1, min_row=primeira_dado, max_row=ultima_dado)
+    chart.add_data(dados, titles_from_data=True)
+    chart.set_categories(categorias)
+
+    # Linhas mais grossas e suaves
+    for serie_graf in chart.series:
+        serie_graf.smooth = True
+        serie_graf.graphicalProperties.line.width = 22000  # ~1.7pt
+
+    col_grafico = get_column_letter(2 + len(candidatos_grafico) + 2)
+    ws.add_chart(chart, f"{col_grafico}5")
+
+    # Larguras
+    larguras = {"A": 12, "B": 10}
+    for j in range(3, 3 + len(candidatos_grafico)):
+        larguras[get_column_letter(j)] = 12
+    _ajustar_larguras(ws, larguras)
+
+
 def gerar_aba_todas_pesquisas(wb, todas_pesquisas):
     ws = wb.create_sheet("Todas as Pesquisas")
 
@@ -223,6 +313,7 @@ def gerar_excel(
     pesos_institutos,
     config,
     pesquisas_por_cenario,
+    series_por_cenario=None,
 ):
     Path(caminho).parent.mkdir(parents=True, exist_ok=True)
     wb = Workbook()
@@ -236,6 +327,12 @@ def gerar_excel(
             pesquisas_por_cenario.get(nome_cenario, []),
             pesos_institutos, config,
         )
+
+    # Abas de evolução temporal (Fase A) — só para cenários que têm série
+    if series_por_cenario:
+        for nome_cenario, serie in series_por_cenario.items():
+            if serie and serie.get("pontos"):
+                gerar_aba_evolucao(wb, nome_cenario, serie)
 
     gerar_aba_todas_pesquisas(wb, todas_pesquisas)
     gerar_aba_config(wb, config, pesos_institutos)
