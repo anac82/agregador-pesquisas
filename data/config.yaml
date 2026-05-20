@@ -1,7 +1,12 @@
 # =============================================================================
 # CONFIGURAÇÃO DO AGREGADOR DE PESQUISAS (v2)
 # =============================================================================
-
+ponderacao:
+  serie_temporal:
+    ativo: true
+    passo_dias: 7
+    janela_dias: 30 
+    
 # --- CENÁRIOS ATIVOS ---
 # Cada cenário tem:
 #   nome: como aparece no Excel (nome da aba)
