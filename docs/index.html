@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agregador de Pesquisas — Presidente 2026</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #ffffff;
+    color: #1a1a1a;
+    line-height: 1.5;
+    padding: 24px;
+  }
+  .container { max-width: 860px; margin: 0 auto; }
+  h1 { font-size: 24px; font-weight: 600; margin-bottom: 4px; }
+  .subtitulo { font-size: 14px; color: #666; margin-bottom: 4px; }
+  .atualizado { font-size: 12px; color: #999; margin-bottom: 28px; }
+  .grafico-wrap { position: relative; width: 100%; height: 440px; margin-bottom: 16px; }
+  .legenda-tend {
+    font-size: 11px; color: #999; line-height: 1.7; margin-top: 8px;
+    border-top: 1px solid #eee; padding-top: 12px;
+  }
+  .rodape {
+    margin-top: 32px; padding-top: 16px; border-top: 1px solid #eee;
+    font-size: 12px; color: #999;
+  }
+  .sem-dados { color: #999; font-style: italic; padding: 40px 0; text-align: center; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Intenção de voto — 1º Turno</h1>
+  <div class="subtitulo">Média móvel ponderada · Eleições presidenciais 2026</div>
+  <div class="atualizado">Atualizado em 20 de maio de 2026</div>
+
+  <div class="grafico-wrap">
+    <canvas id="grafico" role="img" aria-label="Gráfico de evolução da intenção de voto ao longo do tempo."></canvas>
+  </div>
+
+  <div class="legenda-tend" id="legenda-tend"></div>
+
+  <div class="rodape">
+    Fonte: agregação própria de pesquisas registradas no TSE (Quaest, Datafolha, AtlasIntel, Futura, Meio/Ideia).
+    A seta indica a tendência nas últimas 4 semanas. Este é um agregador independente, sem fins comerciais.
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+(function(){
+  const DADOS = {"labels": ["11/jan", "18/jan", "25/jan", "01/fev", "08/fev", "15/fev", "22/fev", "01/mar", "08/mar", "15/mar", "22/mar", "29/mar", "05/abr", "12/abr", "19/abr", "26/abr", "03/mai", "10/mai", "17/mai"], "series": [{"label": "Lula", "cor": "#C0392B", "dados": [39.0, 39.0, 39.0, 39.0, 39.0, 39.0, 39.0, 43.1, 41.7, 41.3, 41.3, 42.7, 43.7, 41.4, 40.4, 38.9, 41.8, 42.7, 41.4], "largura": 3.5}, {"label": "Flávio", "cor": "#2471A3", "dados": [32.0, 32.0, 32.0, 32.0, 32.0, 32.0, 32.0, 36.1, 35.0, 34.5, 34.5, 36.5, 37.6, 37.4, 36.2, 35.2, 36.9, 37.3, 36.1], "largura": 3.5}, {"label": "Caiado", "cor": "#7D8A2E", "dados": [null, null, null, null, null, 4.0, 4.0, 4.6, 4.4, 4.3, 4.3, 3.8, 3.8, 4.9, 5.1, 5.5, 4.7, 4.3, 3.4], "largura": 2}, {"label": "Zema", "cor": "#CA8A04", "dados": [5.0, 5.0, 5.0, 5.0, 5.0, null, null, 3.9, 4.4, 3.6, 3.6, 3.3, 2.8, 3.3, 3.2, 3.2, 3.2, 3.0, 3.3], "largura": 2}, {"label": "Renan", "cor": "#7E57C2", "dados": [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.6, 2.8, 2.3, 2.3, 3.3, 3.3, 2.7, 2.5, 2.0, 3.3, 3.6, 3.2], "largura": 2}], "passo_dias": 7, "janela_dias": 30};
+  const wrap = document.querySelector('.grafico-wrap');
+  const legendaEl = document.getElementById('legenda-tend');
+
+  if (!DADOS) {
+    wrap.innerHTML = '<div class="sem-dados">Ainda não há dados suficientes para gerar o gráfico.</div>';
+    return;
+  }
+
+  function seta(delta){
+    if (delta > 2)    return {s:'\u21C8', cl:'#1D9E75'};
+    if (delta > 0.5)  return {s:'\u2191', cl:'#1D9E75'};
+    if (delta >= -0.5)return {s:'\u2192', cl:'#888780'};
+    if (delta >= -2)  return {s:'\u2193', cl:'#D85A30'};
+    return {s:'\u21CA', cl:'#C0392B'};
+  }
+  function lastIdx(a){ for(let i=a.length-1;i>=0;i--) if(a[i]!=null) return i; return -1; }
+  function valAgo(a,idx,b){ let j=idx-b; while(j>=0&&a[j]==null) j--; return j>=0?a[j]:a[idx]; }
+
+  const labels = DADOS.labels;
+  const datasets = DADOS.series.map(s => ({
+    label: s.label, data: s.dados,
+    borderColor: s.cor, backgroundColor: s.cor,
+    borderWidth: s.largura, tension: 0.4,
+    pointRadius: 0, pointHoverRadius: 4, spanGaps: true, fill: false
+  }));
+
+  // passo entre pontos = passo_dias; 4 semanas = 28 dias => back em nº de pontos
+  const passoPontos4sem = Math.max(1, Math.round(28 / DADOS.passo_dias));
+  const idxIni4 = labels.length - 1 - passoPontos4sem;
+
+  const faixa = {
+    id:'faixa',
+    beforeDatasetsDraw(chart){
+      const {ctx, chartArea:{top,bottom}, scales:{x}} = chart;
+      const x0=x.getPixelForValue(Math.max(0,idxIni4)), x1=x.getPixelForValue(labels.length-1);
+      ctx.save();
+      ctx.fillStyle='rgba(136,135,128,0.10)'; ctx.fillRect(x0,top,x1-x0,bottom-top);
+      ctx.strokeStyle='rgba(136,135,128,0.25)'; ctx.setLineDash([3,3]);
+      ctx.beginPath(); ctx.moveTo(x0,top); ctx.lineTo(x0,bottom); ctx.stroke(); ctx.setLineDash([]);
+      ctx.font='500 10px sans-serif'; ctx.fillStyle='#888780'; ctx.textAlign='center';
+      ctx.fillText('últimas 4 semanas',(x0+x1)/2, top+12); ctx.restore();
+    }
+  };
+  const setasFlutuantes = {
+    id:'setasFlutuantes',
+    afterDatasetsDraw(chart){
+      const {ctx, chartArea:{top}, scales:{x,y}} = chart;
+      const xUlt=x.getPixelForValue(labels.length-1);
+      ctx.save(); ctx.textBaseline='middle';
+      const usadosSeta=[]; const usadosNome=[];
+      DADOS.series.forEach(s=>{
+        const i=lastIdx(s.dados); if(i<0) return;
+        const atual=s.dados[i]; const delta=atual-valAgo(s.dados,i,passoPontos4sem); const t=seta(delta);
+        const yLinha=y.getPixelForValue(atual);
+        let ySeta=yLinha-22; if(ySeta<top+8) ySeta=top+8;
+        usadosSeta.forEach(u=>{ if(Math.abs(u-ySeta)<18) ySeta=u-18; }); usadosSeta.push(ySeta);
+        ctx.beginPath(); ctx.arc(xUlt,yLinha,3,0,Math.PI*2); ctx.fillStyle=s.cor; ctx.fill();
+        ctx.font='500 18px sans-serif'; ctx.fillStyle=t.cl; ctx.textAlign='center';
+        ctx.fillText(t.s, xUlt, ySeta);
+        let yNome=yLinha;
+        usadosNome.forEach(u=>{ if(Math.abs(u-yNome)<17) yNome=u+17; }); usadosNome.push(yNome);
+        ctx.textAlign='left'; ctx.font='500 13px sans-serif'; ctx.fillStyle=s.cor;
+        ctx.fillText(s.label+'  '+atual.toFixed(1)+'%', xUlt+12, yNome);
+      });
+      ctx.restore();
+    }
+  };
+
+  new Chart(document.getElementById('grafico'),{
+    type:'line', data:{labels,datasets}, plugins:[faixa,setasFlutuantes],
+    options:{ responsive:true, maintainAspectRatio:false,
+      layout:{padding:{right:120,top:8}},
+      interaction:{mode:'index',intersect:false},
+      scales:{
+        y:{min:0,max:52,ticks:{stepSize:10,callback:v=>v+'%',font:{size:12},color:'#888780'},
+           grid:{color:'rgba(136,135,128,0.15)',drawTicks:false},border:{display:false}},
+        x:{ticks:{font:{size:11},color:'#888780',maxRotation:0,autoSkip:true,maxTicksLimit:8},
+           grid:{display:false},border:{color:'rgba(136,135,128,0.3)'}}
+      },
+      plugins:{legend:{display:false},
+        tooltip:{backgroundColor:'#2C2C2A',padding:10,cornerRadius:8,
+          callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y==null?'\u2014':c.parsed.y.toFixed(1)+'%')}}}
+    }
+  });
+
+  legendaEl.innerHTML = 'A seta acima de cada linha resume a <b style="font-weight:500;color:#666">tendência nas últimas 4 semanas</b> (faixa cinza): ' +
+    '<span style="color:#1D9E75">&#8648; forte alta</span> · ' +
+    '<span style="color:#1D9E75">&#8593; alta</span> · ' +
+    '<span style="color:#888780">&#8594; estável</span> · ' +
+    '<span style="color:#D85A30">&#8595; queda</span> · ' +
+    '<span style="color:#C0392B">&#8650; forte queda</span>';
+})();
+</script>
+</body>
+</html>
