@@ -6,7 +6,7 @@ import yaml
 import pandas as pd
 if __package__ is None or __package__ == "":
     sys.path.insert(0, str(Path(__file__).parent.parent))
-    from scrapers import db, coletores, ponderacao, pagina_web
+    from scrapers import db, coletores, ponderacao, pagina_web, ultimas_pesquisas
     from scrapers.excel_writer import gerar_excel
 else:
     from . import db, coletores, ponderacao, pagina_web
@@ -104,11 +104,15 @@ def main():
     # Gerar página web (GitHub Pages) se houver séries temporais
     if series_por_cenario:
         print("\n[+] Gerando página web (docs/index.html)...")
+     ultimas = ultimas_pesquisas.extrair_ultimas_pesquisas(
+            str(ROOT / "data/pesquisas_manuais.csv"), n=15
+        )
         caminho_html = pagina_web.gerar_pagina_html(
             str(ROOT / "docs/index.html"),
             series_por_cenario,
             data_geracao=date.today(),
             cenario_principal="1º Turno",
+            ultimas_pesquisas=ultimas,
         )
         print(f"    Página gerada: {caminho_html}")
 if __name__ == "__main__":
