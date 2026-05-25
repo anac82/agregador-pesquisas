@@ -82,8 +82,46 @@ def _preparar_dados_grafico(serie, top_n=5):
         "janela_dias": serie.get("janela_dias", 30),
     }
 
+def _formatar_ultimas_pesquisas(pesquisas):
+    """Formata as últimas pesquisas para exibição no rodapé."""
+    if not pesquisas:
+        return ""
+    
+    meses_pt = ["jan", "fev", "mar", "abr", "mai", "jun",
+                "jul", "ago", "set", "out", "nov", "dez"]
+    
+    linhas = []
+    for p in pesquisas[:10]:  # Mostrar últimas 10
+        instituto = p.get("instituto", "?")
+        data_str = p.get("data", "")
+        amostra = p.get("amostra", "?")
+        registro = p.get("registro_tse", "")
+        
+        # Formatar data
+        if data_str:
+            try:
+                d = _to_date(data_str)
+                data_fmt = f"{d.day} de {meses_pt[d.month - 1]}"
+            except:
+                data_fmt = data_str
+        else:
+            data_fmt = "?"
+        
+        # Montar linha
+        linha = f"<li><strong>{instituto}</strong> ({data_fmt}, n={amostra})"
+        if registro:
+            linha += f" <code>{registro}</code>"
+        linha += "</li>"
+        linhas.append(linha)
+    
+    if linhas:
+        return "<ul style='font-size:11px; color:#999; margin-top:4px; margin-bottom:0;'>" + \
+               "".join(linhas) + "</ul>"
+    return ""
 
-def gerar_pagina_html(caminho, series_por_cenario, data_geracao=None, cenario_principal="1º Turno"):
+
+
+def gerar_pagina_html(caminho, series_por_cenario, data_geracao=None, cenario_principal="1º Turno", ultimas_pesquisas=None):
     """
     Gera a página HTML com o gráfico de evolução.
 
@@ -114,9 +152,13 @@ def gerar_pagina_html(caminho, series_por_cenario, data_geracao=None, cenario_pr
                 "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"]
     data_fmt = f"{data_geracao.day} de {meses_pt[data_geracao.month - 1]} de {data_geracao.year}"
 
+    # Formatar últimas pesquisas
+    html_pesquisas = _formatar_ultimas_pesquisas(ultimas_pesquisas or [])
+ 
     html = _TEMPLATE_HTML.replace("{{DADOS_JSON}}", dados_json)
     html = html.replace("{{CENARIO}}", cenario_principal)
     html = html.replace("{{DATA_GERACAO}}", data_fmt)
+    html = html.replace("{{ULTIMAS_PESQUISAS}}", html_pesquisas)
 
     Path(caminho).parent.mkdir(parents=True, exist_ok=True)
     with open(caminho, "w", encoding="utf-8") as f:
@@ -168,10 +210,17 @@ _TEMPLATE_HTML = r"""<!DOCTYPE html>
   <div class="legenda-tend" id="legenda-tend"></div>
 
   <div class="rodape">
-    Fonte: agregação própria de pesquisas registradas no TSE (Quaest, Datafolha, AtlasIntel, Futura, Meio/Ideia).
-    A seta indica a tendência nas últimas 4 semanas. Este é um agregador independente, sem fins comerciais.
+    <p>Fonte: agregação própria de pesquisas registradas no TSE (Quaest, Datafolha, AtlasIntel, Futura, Meio/Ideia).
+    A seta indica a tendência nas últimas 4 semanas. Este é um agregador independente, sem fins comerciais.</p>
+    
+    <details style="margin-top: 12px;">
+      <summary style="cursor: pointer; color: #666; font-weight: 500;">
+        Últimas pesquisas consideradas →
+      </summary>
+      {{ULTIMAS_PESQUISAS}}
+    </details>
   </div>
-</div>
+ 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
