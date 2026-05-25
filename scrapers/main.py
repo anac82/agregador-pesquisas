@@ -9,7 +9,7 @@ if __package__ is None or __package__ == "":
     from scrapers import db, coletores, ponderacao, pagina_web, ultimas_pesquisas
     from scrapers.excel_writer import gerar_excel
 else:
-    from . import db, coletores, ponderacao, pagina_web
+    from . import db, coletores, ponderacao, pagina_web, ultimas_pesquisas
     from .excel_writer import gerar_excel
 ROOT = Path(__file__).parent.parent
 def carregar_config():
@@ -104,7 +104,7 @@ def main():
     # Gerar página web (GitHub Pages) se houver séries temporais
     if series_por_cenario:
         print("\n[+] Gerando página web (docs/index.html)...")
-     ultimas = ultimas_pesquisas.extrair_ultimas_pesquisas(
+        ultimas = ultimas_pesquisas.extrair_ultimas_pesquisas(
             str(ROOT / "data/pesquisas_manuais.csv"), n=15
         )
         caminho_html = pagina_web.gerar_pagina_html(
