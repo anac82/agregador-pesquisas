@@ -183,3 +183,39 @@ Datafolha,Folha de S. Paulo,2026-05-20,2026-05-21,2004,2.0,95,2,Lula vs Zema,pre
 Datafolha,Folha de S. Paulo,2026-05-20,2026-05-21,2004,2.0,95,2,Lula vs Caiado,presencial,,BR-07489/2026,https://www.gazetadopovo.com.br/eleicoes/2026/pesquisa-eleitoral-2026/datafolha-presidente-maio-2026-2/,49.0,0.0,,38.0,,,,,,,,11.0,2.0
 Veritá,Contratante próprio,2026-04-06,2026-04-07,1030,1.0,95,1,estimulado,URA (telefone),,BR-01960/2026,,33.2,35.9,1.8,1.9,1.8,0.0,0.0,0.0,0.4,0.0,0.0,4.1,15.9
 Veritá,Contratante próprio,2026-04-06,2026-04-07,1030,1.0,95,2,Lula vs Flávio,URA (telefone),,BR-01960/2026,,39.8,41.0,,,,,,,,,,19.2,0.0
+Nexus/FSB,BTG Pactual,2026-05-22,2026-05-24,2045,2.0,95,1,estimulado,telefone,,BR-04193/2026,,40.0,35.0,4.0,5.0,3.0,1.0,1.0,,,,,7.0,2.0
+Nexus/FSB,BTG Pactual,2026-05-22,2026-05-24,2045,2.0,95,1,estimulado 2,telefone,,BR-04193/2026,,41.0,35.0,4.0,5.0,4.0,,,,,,,6.0,2.0
+Nexus/FSB,BTG Pactual,2026-05-22,2026-05-24,2045,2.0,95,2,Lula vs Flávio,telefone,,BR-04193/2026,,47.0,43.0,,,,,,,,,,9.0,1.0
+Nexus/FSB,BTG Pactual,2026-05-22,2026-05-24,2045,2.0,95,2,Lula vs Caiado,telefone,,BR-04193/2026,,46.0,,,40.0,,,,,,,,12.0,1.0
+Nexus/FSB,BTG Pactual,2026-05-22,2026-05-24,2045,2.0,95,2,Lula vs Zema,telefone,,BR-04193/2026,,49.0,,38.0,,,,,,,,,11.0,2.0
+Futura Inteligência,Próprio,2026-05-04,2026-05-08,2000,2.2,95,1,estimulado,telefone,,BR-03678/2026,,39.8,37.3,2.9,4.8,1.4,1.3,0.5,,0.3,,,7.1,4.6
+Futura Inteligência,Próprio,2026-05-04,2026-05-08,2000,2.2,95,2,Lula vs Flávio,telefone,,BR-03678/2026,,44.4,46.9,,,,,,,,,,8.7,0.0
+AtlasIntel,AtlasIntel,2026-01-15,2026-01-20,5418,1.0,95,1,estimulado,online,,BR-02804/2026,,48.8,35.0,2.8,4.3,3.4,,,,1.0,,,1.5,0.4
+AtlasIntel,AtlasIntel,2026-01-15,2026-01-20,5418,1.0,95,1,estimulado com Tarcísio,online,,BR-02804/2026,,48.4,28.0,1.7,2.9,2.9,,,,1.0,,,2.1,0.3
+AtlasIntel,AtlasIntel,2026-01-15,2026-01-20,5418,1.0,95,2,Lula vs Flávio,online,,BR-02804/2026,,49.0,45.0,,,,,,,,,,6.0,
+AtlasIntel,AtlasIntel,2026-01-15,2026-01-20,5418,1.0,95,2,Lula vs Caiado,online,,BR-02804/2026,,49.0,,,39.0,,,,,,,,13.0,
+AtlasIntel,AtlasIntel,2026-01-15,2026-01-20,5418,1.0,95,2,Lula vs Zema,online,,BR-02804/2026,,49.0,,39.0,,,,,,,,,12.0,
+Real Time Big Data,CNN Brasil,2026-02-06,2026-02-07,2000,2.0,95,1,estimulado,presencial,,BR-06428/2026,,39.0,30.0,,,,,,,,,,0.0,0.0
+Real Time Big Data,CNN Brasil,2026-02-06,2026-02-07,2000,2.0,95,1,estimulado 2,presencial,,BR-06428/2026,,40.0,32.0,4.0,,,,,,3.0,,,0.0,0.0
+Gerp,Gerp Mercadologia,2026-01-28,2026-02-02,2000,2.24,95,2,Lula vs Flávio,telefone,,BR-04519/2026,,45.0,45.0,,,,,,,,,,10.0,
+Gerp,Gerp Mercadologia,2026-01-28,2026-02-02,2000,2.24,95,2,Lula vs Ratinho,telefone,,BR-04519/2026,,45.0,,,,,,,,,,,14.0,0.0
+Real Time Big Data,Record,2026-02-28,2026-03-02,2000,2.0,95,1,estimulado,presencial,,BR-09353/2026,,39.0,32.0,2.0,,2.0,,,,2.0,,,7.0,7.0
+Real Time Big Data,Record,2026-02-28,2026-03-02,2000,2.0,95,1,estimulado 2,presencial,,BR-09353/2026,,40.0,34.0,3.0,,2.0,,,,2.0,,,7.0,8.0
+Real Time Big Data,Record,2026-02-28,2026-03-02,2000,2.0,95,1,estimulado 3,presencial,,BR-09353/2026,,40.0,33.0,3.0,5.0,2.0,,,,2.0,,,7.0,8.0
+Real Time Big Data,Record,2026-02-28,2026-03-02,2000,2.0,95,2,Lula vs Flávio,presencial,,BR-09353/2026,,42.0,41.0,,,,,,,,,,10.0,7.0
+Real Time Big Data,Record,2026-02-28,2026-03-02,2000,2.0,95,2,Lula vs Caiado,presencial,,BR-09353/2026,,45.0,,,36.0,,,,,,,,12.0,7.0
+Real Time Big Data,Record,2026-02-28,2026-03-02,2000,2.0,95,2,Lula vs Zema,presencial,,BR-09353/2026,,44.0,,35.0,,,,,,,,,13.0,8.0
+Gerp,Gerp Mercadologia,2026-01-28,2026-02-02,2000,2.24,95,1,estimulado,telefone,,BR-04519/2026,,39.0,35.0,,,,,,,,,,0.0,0.0
+Gerp,AESP,2026-03-20,2026-03-25,2000,2.24,95,1,estimulado,telefone,,BR-02846/2026,,38.0,36.0,3.0,3.0,1.0,,,,,,,3.0,6.0
+Gerp,AESP,2026-03-20,2026-03-25,2000,2.24,95,1,estimulado 2,telefone,,BR-02846/2026,,38.0,37.0,5.0,5.0,1.0,,,,,,,3.0,4.0
+Gerp,AESP,2026-03-20,2026-03-25,2000,2.24,95,1,estimulado 3,telefone,,BR-02846/2026,,37.0,37.0,4.0,,1.0,,,,,,,4.0,4.0
+Gerp,AESP,2026-03-20,2026-03-25,2000,2.24,95,1,estimulado 4,telefone,,BR-02846/2026,,38.0,40.0,5.0,,1.0,,,,,,,3.0,4.0
+Gerp,AESP,2026-03-20,2026-03-25,2000,2.24,95,2,Lula vs Flávio,telefone,,BR-02846/2026,,45.0,48.0,,,,,,,,,,5.0,3.0
+Gerp,AESP,2026-03-20,2026-03-25,2000,2.24,95,2,Lula vs Ciro,telefone,,BR-02846/2026,,39.0,,,,,,,,,,,19.0,4.0
+AtlasIntel,AtlasIntel,2026-02-19,2026-02-24,4986,1.0,95,1,estimulado,online,,BR-07600/2026,,45.0,37.9,3.9,4.9,2.9,,,,1.1,,,3.8,0.5
+AtlasIntel,AtlasIntel,2026-02-19,2026-02-24,4986,1.0,95,1,estimulado com Ratinho,online,,BR-07600/2026,,45.1,39.5,3.9,,3.2,,,,1.1,,,2.8,0.6
+AtlasIntel,AtlasIntel,2026-02-19,2026-02-24,4986,1.0,95,2,Lula vs Flávio,online,,BR-07600/2026,,46.2,46.3,,,,,,,,,,7.5,
+AtlasIntel,AtlasIntel,2026-02-19,2026-02-24,4986,1.0,95,2,Lula vs Zema,online,,BR-07600/2026,,46.0,,41.7,,,,,,,,,12.3,
+AtlasIntel,AtlasIntel,2026-02-19,2026-02-24,4986,1.0,95,2,Lula vs Caiado,online,,BR-07600/2026,,45.7,,,37.6,,,,,,,,16.7,
+Meio/Ideia,Canal Meio,2026-01-08,2026-01-12,2000,2.2,95,1,estimulado com Tarcísio,telefone,,BR-06731/2026,,40.2,,5.5,5.5,0.5,,,,0.4,,,3.6,11.8
+Meio/Ideia,Canal Meio,2026-01-08,2026-01-12,2000,2.2,95,1,estimulado,telefone,,BR-06731/2026,,39.6,27.6,5.4,5.5,0.7,,,,0.2,,,5.6,12.0
