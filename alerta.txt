@@ -1,0 +1,95 @@
+============================================================
+MONITOR TSE — 2026-05-27
+Presidenciais no TSE: 308   |   Aprovadas: 84
+============================================================
+
+✅ Nenhuma pesquisa nova no TSE hoje.
+
+⏳ APROVADAS SEM DADOS NO AGREGADOR (84):
+------------------------------------------------------------
+  AGORASEI PESQUISA              BR056712026          campo_fim: 2026-05-31  n=1.500  divulg: 2026-06-01
+  Real Time Big Data             BR058642026          campo_fim: 2026-05-30  n=2.000  divulg: 2026-06-01
+  Vox Brasil                     BR095392026          campo_fim: 2026-05-29  n=2.100  divulg: 2026-05-31
+  PoderData                      BR048822026          campo_fim: 2026-05-28  n=2.400  divulg: 2026-05-29
+  Boas Ideias                    BR029182026          campo_fim: 2026-05-27  n=1.500  divulg: 2026-05-28
+  Média Inteligência             BR079092026          campo_fim: 2026-05-27  n=2.000  divulg: 2026-05-29
+  Indexa                         BR021542026          campo_fim: 2026-05-24  n=2.000  divulg: 2026-05-27
+  Nexus                          BR041932026          campo_fim: 2026-05-24  n=2.000  divulg: 2026-05-25
+  Jota                           BR029972026          campo_fim: 2026-05-23  n=6.000  divulg: 2026-05-27
+  Gerp                           BR079712026          campo_fim: 2026-05-22  n=2.000  divulg: 2026-05-22
+  Item Pesquisas                 BR042722026          campo_fim: 2026-05-22  n=1.250  divulg: 2026-05-29
+  Datafolha                      BR074892026          campo_fim: 2026-05-22  n=2.004  divulg: 2026-05-22
+  100 Cidades                    BR065292026          campo_fim: 2026-05-21  n=2.000  divulg: 2026-05-21
+  Inst. Pesquisa Múltipla        BR004322026          campo_fim: 2026-05-20  n=1.070  divulg: 2026-05-24
+  Vox Brasil                     BR024162026          campo_fim: 2026-05-19  n=2.100  divulg: 2026-05-20
+  Vetor                          BR093012026          campo_fim: 2026-05-19  n=9.000  divulg: 2026-05-21
+  AtlasIntel                     BR069392026          campo_fim: 2026-05-18  n=5.000  divulg: 2026-05-19
+  Qualitta                       BR067132026          campo_fim: 2026-05-14  n=1.200  divulg: 2026-05-16
+  Datafolha                      BR002902026          campo_fim: 2026-05-14  n=2.004  divulg: 2026-05-15
+  Ipsensus                       BR006952026          campo_fim: 2026-05-13  n=1.500  divulg: 2026-05-14
+  Vox Brasil                     BR024232026          campo_fim: 2026-05-12  n=2.100  divulg: 2026-05-14
+  Quaest                         BR035982026          campo_fim: 2026-05-11  n=2.004  divulg: 2026-05-13
+  Gerp                           BR033692026          campo_fim: 2026-05-11  n=2.000  divulg: 2026-05-14
+  Vox Brasil                     BR020522026          campo_fim: 2026-05-09  n=1.200  divulg: 2026-05-11
+  100 Cidades                    BR036782026          campo_fim: 2026-05-08  n=2.000  divulg: 2026-05-11
+  Instituto Phoenix              BR031452026          campo_fim: 2026-05-06  n=1.203  divulg: 2026-05-07
+  Boas Ideias                    BR053562026          campo_fim: 2026-05-05  n=1.500  divulg: 2026-05-06
+  Real Time Big Data             BR036272026          campo_fim: 2026-05-04  n=2.000  divulg: 2026-05-05
+  DataTrends                     BR083372026          campo_fim: 2026-05-03  n=4.000  divulg: 2026-05-06
+  Delta Agência                  BR013812026          campo_fim: 2026-04-30  n=1.006  divulg: 2026-05-01
+  100 Cidades                    BR005762026          campo_fim: 2026-04-29  n=1.200  divulg: 2026-05-06
+  AtlasIntel                     BR079922026          campo_fim: 2026-04-27  n=5.000  divulg: 2026-04-28
+  Nexus                          BR010752026          campo_fim: 2026-04-26  n=2.000  divulg: 2026-04-27
+  DataTrends                     BR071042026          campo_fim: 2026-04-23  n=1.200  divulg: 2026-04-26
+  Exatus                         BR019492026          campo_fim: 2026-04-17  n=1.518  divulg: 2026-04-28
+  Perfil Pesquisas               BR089052026          campo_fim: 2026-04-16  n=1.800  divulg: 2026-04-17
+  Quaest                         BR092852026          campo_fim: 2026-04-13  n=2.004  divulg: 2026-04-15
+  MDA                            BR028472026          campo_fim: 2026-04-12  n=2.002  divulg: 2026-04-14
+  100 Cidades                    BR082822026          campo_fim: 2026-04-11  n=2.000  divulg: 2026-04-14
+  Affare Institute               BR089712026          campo_fim: 2026-04-11  n=1.500  divulg: 2026-04-12
+  GP1 Pesquisa                   BR007392026          campo_fim: 2026-04-10  n=1.137  divulg: 2026-04-13
+  Datafolha                      BR037702026          campo_fim: 2026-04-09  n=2.004  divulg: 2026-04-11
+  Instituto França               BR044202026          campo_fim: 2026-04-08  n=1.200  divulg: 2026-04-08
+  Boas Ideias                    BR006052026          campo_fim: 2026-04-07  n=1.500  divulg: 2026-04-08
+  Veritá                         BR024762026          campo_fim: 2026-04-04  n=40.500  divulg: 2026-04-04
+  Jota                           BR093712026          campo_fim: 2026-03-30  n=5.000  divulg: 2026-03-30
+  Nexus                          BR078752026          campo_fim: 2026-03-29  n=2.000  divulg: 2026-03-30
+  Paraná Pesquisas               BR008732026          campo_fim: 2026-03-28  n=2.080  divulg: 2026-03-30
+  100 Cidades                    BR050672026          campo_fim: 2026-03-27  n=1.200  divulg: 2026-04-01
+  Gerp                           BR028462026          campo_fim: 2026-03-27  n=2.000  divulg: 2026-03-25
+  Affare Institute               BR087132026          campo_fim: 2026-03-26  n=1.500  divulg: 2026-03-28
+  Qualitta                       BR054052026          campo_fim: 2026-03-25  n=1.200  divulg: 2026-03-27
+  AtlasIntel                     BR060582026          campo_fim: 2026-03-23  n=4.200  divulg: 2026-03-31
+  AtlasIntel                     BR042272026          campo_fim: 2026-03-23  n=5.000  divulg: 2026-03-24
+  Delta Agência                  BR070462026          campo_fim: 2026-03-21  n=1.006  divulg: 2026-03-22
+  Instituto França               BR019052026          campo_fim: 2026-03-18  n=1.224  divulg: 2026-03-18
+  Instituto Phoenix              BR040312026          campo_fim: 2026-03-12  n=1.055  divulg: 2026-03-12
+  Boas Ideias                    BR003862026          campo_fim: 2026-03-10  n=1.500  divulg: 2026-03-11
+  Quaest                         BR058092026          campo_fim: 2026-03-09  n=2.004  divulg: 2026-03-11
+  Ranking Brasil                 BR053592026          campo_fim: 2026-03-06  n=2.000  divulg: 2026-03-06
+  100 Cidades                    BR066072026          campo_fim: 2026-03-06  n=2.000  divulg: 2026-03-11
+  Datafolha                      BR037152026          campo_fim: 2026-03-05  n=2.004  divulg: 2026-03-05
+  Vetor                          BR037422026          campo_fim: 2026-03-03  n=9.000  divulg: 2026-03-05
+  Real Time Big Data             BR093532026          campo_fim: 2026-03-02  n=2.000  divulg: 2026-03-03
+  Instituto Phoenix              BR029212026          campo_fim: 2026-02-28  n=1.200  divulg: 2026-03-03
+  Paraná Pesquisas               BR079742026          campo_fim: 2026-02-25  n=2.080  divulg: 2026-02-27
+  DataTrends                     BR067802026          campo_fim: 2026-02-24  n=1.200  divulg: 2026-02-28
+  AtlasIntel                     BR076002026          campo_fim: 2026-02-24  n=5.000  divulg: 2026-02-25
+  Colectta                       BR042912026          campo_fim: 2026-02-09  n=2.004  divulg: 2026-02-11
+  Quaest                         BR002492026          campo_fim: 2026-02-09  n=2.004  divulg: 2026-02-11
+  100 Cidades                    BR022762026          campo_fim: 2026-02-07  n=2.000  divulg: 2026-02-10
+  Real Time Big Data             BR064282026          campo_fim: 2026-02-07  n=2.000  divulg: 2026-02-09
+  Inst. Pesquisa Múltipla        BR030572026          campo_fim: 2026-02-07  n=1.200  divulg: 2026-02-12
+  Boas Ideias                    BR084252026          campo_fim: 2026-02-02  n=1.500  divulg: 2026-02-04
+  Jota                           BR037962026          campo_fim: 2026-01-31  n=5.000  divulg: 2026-02-01
+  Gerp                           BR045192026          campo_fim: 2026-01-30  n=2.000  divulg: 2026-02-04
+  Paraná Pesquisas               BR082542026          campo_fim: 2026-01-28  n=2.080  divulg: 2026-01-29
+  Anova                          BR040542026          campo_fim: 2026-01-26  n=2.000  divulg: 2026-01-28
+  100 Cidades                    BR030242026          campo_fim: 2026-01-23  n=1.200  divulg: 2026-01-27
+  Data Povo                      BR091232026          campo_fim: 2026-01-21  n=1.300  divulg: 2026-02-03
+  AtlasIntel                     BR028042026          campo_fim: 2026-01-20  n=5.000  divulg: 2026-01-21
+  100 Cidades                    BR082332026          campo_fim: 2026-01-19  n=2.000  divulg: 2026-01-22
+  Boas Ideias                    BR067312026          campo_fim: 2026-01-12  n=2.000  divulg: 2026-01-13
+  Quaest                         BR008352026          campo_fim: 2026-01-11  n=2.004  divulg: 2026-01-14
+
+Gerado: 27/05/2026 17:34
