@@ -128,6 +128,9 @@ def _normalizar_protocolo(p: str) -> str:
         ano    = m.group(2)
         return f"BR-{numero}/{ano}"
     return p
+
+
+COLUNAS_HISTORICO = [
     "NR_PROTOCOLO_REGISTRO", "instituto", "tse_registro",
     "campo_inicio", "campo_fim", "campo_dias", "divulgacao",
     "QT_ENTREVISTADO", "custo_reais", "custo_por_entrevistado",
