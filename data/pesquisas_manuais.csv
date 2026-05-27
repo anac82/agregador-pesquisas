@@ -12,9 +12,9 @@ AtlasIntel,AtlasIntel,2026-01-15,2026-01-20,5418,1.0,95,2,Lula vs Flávio,online
 AtlasIntel,AtlasIntel,2026-01-15,2026-01-20,5418,1.0,95,2,Lula vs Caiado,online,,BR-02804/2026,,49.0,,,39.0,,,,,,,,13.0,
 AtlasIntel,AtlasIntel,2026-01-15,2026-01-20,5418,1.0,95,2,Lula vs Zema,online,,BR-02804/2026,,49.0,,39.0,,,,,,,,,12.0,
 100%Cidades/Futura,Contratante,2026-01-15,2026-01-19,2000,2.2,95,1,estimulado,online,,BR-06845/2026,,38.5,34.2,3.1,4.3,2.0,1.2,0.6,0.0,0.4,0.0,,7.2,8.5
-100%Cidades/Futura,Futura Pesquisas,2026-01-15,2026-01-19,2000,2.2,95,2,Lula vs Zema,online,,BR-06845/2026,,41.8,,36.9,,,,,,,,,12.8,8.5
-100%Cidades/Futura,Futura Pesquisas,2026-01-15,2026-01-19,2000,2.2,95,2,Lula vs Flávio,online,,BR-06845/2026,,41.0,42.5,,,,,,,,,,8.3,8.2
-100%Cidades/Futura,Futura Pesquisas,2026-01-15,2026-01-19,2000,2.2,95,2,Lula vs Caiado,online,,BR-06845/2026,,42.1,,,37.4,,,,,,,,12.5,8.0
+100% Cidades/Futura,Futura Pesquisas,2026-01-15,2026-01-19,2000,2.2,95,2,Lula vs Zema,online,,BR-06845/2026,,41.8,,36.9,,,,,,,,,12.8,8.5
+100% Cidades/Futura,Futura Pesquisas,2026-01-15,2026-01-19,2000,2.2,95,2,Lula vs Flávio,online,,BR-06845/2026,,41.0,42.5,,,,,,,,,,8.3,8.2
+100% Cidades/Futura,Futura Pesquisas,2026-01-15,2026-01-19,2000,2.2,95,2,Lula vs Caiado,online,,BR-06845/2026,,42.1,,,37.4,,,,,,,,12.5,8.0
 Paraná Pesquisas,Paraná Pesquisas,2026-01-25,2026-01-28,2080,2.8,95,1,estimulado,presencial,,BR-08254/2026,,39.8,33.1,2.8,3.7,1.5,1.1,0.5,,0.3,,,6.8,10.6
 Paraná Pesquisas,Paraná Pesquisas,2026-01-25,2026-01-28,2080,2.8,95,2,Lula vs Flávio,presencial,,BR-08254/2026,,40.5,33.8,,,,,,,,,,6.9,18.8
 Paraná Pesquisas,Paraná Pesquisas,2026-01-25,2026-01-28,2080,2.8,95,2,Lula vs Tarcísio,presencial,,BR-08254/2026,,40.7,,,,,,,,,,,27.5,31.8
@@ -179,3 +179,12 @@ Nexus/FSB,BTG Pactual,2026-05-22,2026-05-24,2045,2.0,95,1,estimulado 2,telefone,
 Nexus/FSB,BTG Pactual,2026-05-22,2026-05-24,2045,2.0,95,2,Lula vs Caiado,telefone,,BR-04193/2026,,46.0,,,40.0,,,,,,,,12.0,1.0
 Nexus/FSB,BTG Pactual,2026-05-22,2026-05-24,2045,2.0,95,2,Lula vs Flávio,telefone,,BR-04193/2026,,47.0,43.0,,,,,,,,,,9.0,1.0
 Nexus/FSB,BTG Pactual,2026-05-22,2026-05-24,2045,2.0,95,2,Lula vs Zema,telefone,,BR-04193/2026,,49.0,,38.0,,,,,,,,,11.0,2.0
+Vox Brasil,Próprio,2026-05-17,2026-05-19,2100,2.15,95,1,estimulado,presencial,,BR-02416/2026,,41.5,32.1,4.1,5.9,1.5,0.3,,,0.1,,,4.9,9.4
+Vox Brasil,Próprio,2026-05-17,2026-05-19,2100,2.15,95,2,Lula vs Flávio,presencial,,BR-02416/2026,,46.8,38.1,,,,,,,,,,8.7,6.4
+AtlasIntel,AtlasIntel,2026-03-16,2026-03-23,4200,1.0,95,1,estimulado,online,,BR-06058/2026,,45.9,40.1,3.1,3.7,4.4,,,,0.6,,,1.9,0.3
+AtlasIntel,AtlasIntel,2026-03-16,2026-03-23,4200,1.0,95,2,Lula vs Flávio,online,,BR-06058/2026,,46.6,47.6,,,,,,,,,,5.8,
+MDA,CNT,2026-04-08,2026-04-12,2002,2.2,95,1,estimulado,presencial,,BR-02847/2026,,39.2,30.2,3.3,4.6,1.8,,,,1.5,,,10.0,9.0
+MDA,CNT,2026-04-08,2026-04-12,2002,2.2,95,2,Lula vs Flávio,presencial,,BR-02847/2026,,44.9,40.2,,,,,,,,,,11.3,3.6
+MDA,CNT,2026-04-08,2026-04-12,2002,2.2,95,2,Lula vs Zema,presencial,,BR-02847/2026,,45.2,,31.6,,,,,,,,,15.9,7.3
+MDA,CNT,2026-04-08,2026-04-12,2002,2.2,95,2,Lula vs Caiado,presencial,,BR-02847/2026,,44.4,,,32.7,,,,,,,,15.2,7.7
+MDA,CNT,2026-04-08,2026-04-12,2002,2.2,95,2,Lula vs Renan,presencial,,BR-02847/2026,,45.0,,,,28.3,,,,,,,17.7,9.0
