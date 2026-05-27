@@ -114,7 +114,20 @@ INSTITUTOS_CONHECIDOS = {
     "INSTITUTO PARANA DE PESQUISAS", "MDA-PESQUISA",
 }
 
-COLUNAS_HISTORICO = [
+def _normalizar_protocolo(p: str) -> str:
+    """Converte BR008352026 → BR-00835/2026."""
+    import re
+    p = str(p).strip().upper()
+    # Já está no formato correto
+    if re.match(r'^BR-\d{5}/\d{4}$', p):
+        return p
+    # Formato sem hífen e sem barra: BR008352026
+    m = re.match(r'^BR0*(\d+)(\d{4})$', p)
+    if m:
+        numero = m.group(1).zfill(5)
+        ano    = m.group(2)
+        return f"BR-{numero}/{ano}"
+    return p
     "NR_PROTOCOLO_REGISTRO", "instituto", "tse_registro",
     "campo_inicio", "campo_fim", "campo_dias", "divulgacao",
     "QT_ENTREVISTADO", "custo_reais", "custo_por_entrevistado",
@@ -214,6 +227,9 @@ def processar(df: pd.DataFrame) -> pd.DataFrame:
         if pd.notna(r["custo_reais"]) and r["QT_ENTREVISTADO"] > 0 else None,
         axis=1
     )
+
+    # Normalizar protocolo para formato BR-XXXXX/2026 (igual ao pesquisas_manuais.csv)
+    df["NR_PROTOCOLO_REGISTRO"] = df["NR_PROTOCOLO_REGISTRO"].apply(_normalizar_protocolo)
 
     return df
 
