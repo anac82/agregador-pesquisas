@@ -134,6 +134,7 @@ COLUNAS_HISTORICO = [
     "NR_PROTOCOLO_REGISTRO", "instituto", "tse_registro",
     "campo_inicio", "campo_fim", "campo_dias", "divulgacao",
     "QT_ENTREVISTADO", "custo_reais", "custo_por_entrevistado",
+    "score",
     "metodologia", "pesquisa_propria",
     "status", "usa_no_agregador",
     "flag_amostra_ok", "flag_nacional_explicito",
@@ -218,10 +219,22 @@ def processar(df: pd.DataFrame) -> pd.DataFrame:
     ).dt.days
 
     m = df["DS_METODOLOGIA_PESQUISA"].fillna("").str.lower()
+
+    # Ordem de precedência: URA > online > telefone > presencial
     df["metodologia"] = "presencial"
-    df.loc[m.str.contains(r"telefon|cati|capi",                         regex=True), "metodologia"] = "telefone"
-    df.loc[m.str.contains(r"online|web|internet|eletrônico|formulário", regex=True), "metodologia"] = "online"
-    df.loc[m.str.contains(r"ura|robocall|automatiz",                    regex=True), "metodologia"] = "URA"
+    df.loc[
+        m.str.contains(r"telefon|cati", regex=True) &
+        ~m.str.contains(r"\bura\b|robocall|automatiz|online|web|formulário", regex=True),
+        "metodologia"
+    ] = "telefone"
+    df.loc[
+        m.str.contains(r"online|coleta.*web|questionário.*web|formulário eletrônico", regex=True),
+        "metodologia"
+    ] = "online"
+    df.loc[
+        m.str.contains(r"\bura\b|robocall|automatiz", regex=True),
+        "metodologia"
+    ] = "URA"
 
     df["pesquisa_propria"] = df["ST_PESQUISA_PROPRIA"] == "S"
 
@@ -230,6 +243,29 @@ def processar(df: pd.DataFrame) -> pd.DataFrame:
         if pd.notna(r["custo_reais"]) and r["QT_ENTREVISTADO"] > 0 else None,
         axis=1
     )
+
+    # ── Score da pesquisa ─────────────────────────────────────────────────────
+    # score = f_amostra × f_metodologia × f_custo
+    # Calculado sobre o conjunto completo; a mediana de custo/entrevistado
+    # é usada como referência para normalizar o fator custo.
+    PESO_METOD = {"presencial": 1.00, "telefone": 0.90, "online": 0.80, "URA": 0.65}
+    cpp_vals   = df["custo_por_entrevistado"].dropna()
+    cpp_ref    = cpp_vals.median() if len(cpp_vals) > 0 else 1.0
+
+    def _score(row):
+        n   = row["QT_ENTREVISTADO"] if pd.notna(row["QT_ENTREVISTADO"]) else 0
+        n   = min(n, 10000)          # cap em 10.000 para evitar distorção de amostras suspeitas
+        f_a = math.sqrt(max(n, 0) / 2000)
+        f_m = PESO_METOD.get(row["metodologia"], 0.75)
+        cpp = row["custo_por_entrevistado"]
+        if pd.notna(cpp) and cpp > 0 and cpp_ref > 0:
+            f_c = math.sqrt(cpp / cpp_ref)
+            f_c = max(0.5, min(1.5, f_c))
+        else:
+            f_c = 1.0
+        return round(f_a * f_m * f_c, 3)
+
+    df["score"] = df.apply(_score, axis=1)
 
     # Normalizar protocolo para formato BR-XXXXX/2026 (igual ao pesquisas_manuais.csv)
     df["NR_PROTOCOLO_REGISTRO"] = df["NR_PROTOCOLO_REGISTRO"].apply(_normalizar_protocolo)
