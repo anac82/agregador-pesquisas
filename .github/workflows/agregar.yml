@@ -2,7 +2,7 @@ name: Agregador de pesquisas
 
 on:
   schedule:
-    - cron: '0 12 * * *'
+    - cron: '0 12 * * *'       # 09:00 Brasília todo dia
   push:
     paths:
       - 'data/pesquisas_manuais.csv'
@@ -21,10 +21,10 @@ jobs:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Setup Python
+      - name: Python 3.12
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
@@ -34,6 +34,9 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
+
+      - name: Monitorar TSE (atualiza historico_tse.csv + gera alerta.txt)
+        run: python scrapers/monitor_tse.py
 
       - name: Rodar agregador
         run: python -m scrapers.main
@@ -45,53 +48,13 @@ jobs:
           path: output/agregador_pesquisas.xlsx
           retention-days: 90
 
-      - name: Atualizar lista de pendentes (remover pesquisas já coletadas)
-        run: |
-          python3 << 'PYEOF'
-          import csv, os
-          from pathlib import Path
-
-          pendentes_path = Path("data/pesquisas_pendentes.md")
-          csv_path       = Path("data/pesquisas_manuais.csv")
-
-          if not pendentes_path.exists() or not csv_path.exists():
-              print("Sem pendentes ou CSV não encontrado, pulando.")
-              exit(0)
-
-          # Protocolos já no CSV
-          with open(csv_path, encoding="utf-8") as f:
-              reader = csv.DictReader(f)
-              protos_coletados = {
-                  r["registro_tse"].strip()
-                  for r in reader
-                  if r.get("registro_tse","").strip()
-              }
-
-          conteudo = pendentes_path.read_text(encoding="utf-8")
-          linhas_novas = []
-          removidas = 0
-
-          for linha in conteudo.splitlines():
-              if linha.startswith("| ") and "⏳ pendente" in linha:
-                  # Protocolo está na 2ª coluna: | Instituto | `BR-XXXXX/2026` | ...
-                  partes = linha.split("|")
-                  if len(partes) > 2:
-                      proto = partes[2].strip().strip("`")
-                      if proto in protos_coletados:
-                          # Substituir ⏳ pendente por ✅ coletada
-                          linha = linha.replace("⏳ pendente", "✅ coletada")
-                          removidas += 1
-              linhas_novas.append(linha)
-
-          pendentes_path.write_text("\n".join(linhas_novas) + "\n", encoding="utf-8")
-          print(f"✅ {removidas} pesquisa(s) marcada(s) como coletada(s)")
-          PYEOF
-
       - name: Commitar resultados
         run: |
-          git config user.name "github-actions[bot]"
+          git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add output/agregador_pesquisas.xlsx data/pesquisas.db docs/index.html data/pesquisas_pendentes.md
-          git diff --staged --quiet || git commit -m "Atualização automática $(date +%Y-%m-%d)"
+          git add data/historico_tse.csv alerta.txt \
+                  output/agregador_pesquisas.xlsx \
+                  data/pesquisas.db docs/index.html
+          git diff --staged --quiet || git commit -m "atualização $(date +'%Y-%m-%d')"
           git pull --rebase origin main
           git push
