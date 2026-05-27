@@ -2,7 +2,7 @@ name: Agregador de pesquisas
 
 on:
   schedule:
-    - cron: '0 12 * * *'       # 09:00 Brasília todo dia
+    - cron: '0 12 * * *'
   push:
     paths:
       - 'data/pesquisas_manuais.csv'
@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Python 3.12
         uses: actions/setup-python@v6
@@ -34,7 +36,6 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
-          pip install requests pandas
 
       - name: Monitorar TSE (atualiza historico_tse.csv + gera alerta.txt)
         run: python scrapers/monitor_tse.py
@@ -54,9 +55,26 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
           git add data/historico_tse.csv alerta.txt \
                   output/agregador_pesquisas.xlsx \
                   data/pesquisas.db docs/index.html
-          git diff --staged --quiet || git commit -m "atualização $(date +'%Y-%m-%d')"
-          git pull --rebase origin main
-          git push
+
+          git diff --staged --quiet && exit 0
+
+          git commit -m "atualização $(date +'%Y-%m-%d')"
+
+          # Pegar últimas mudanças do remoto
+          git fetch origin main
+
+          # Para arquivos binários gerados, sempre usar nossa versão
+          git checkout HEAD -- data/pesquisas.db output/agregador_pesquisas.xlsx 2>/dev/null || true
+
+          # Rebase simples — se conflitar, aborta e força push
+          git rebase origin/main || {
+            git rebase --abort
+            git push --force-with-lease origin main
+            exit 0
+          }
+
+          git push origin main
