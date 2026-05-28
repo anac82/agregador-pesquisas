@@ -58,6 +58,14 @@ def main():
     print(f"   {len(novas)} pesquisas encontradas")
     print("\n[2/4] Salvando no banco (classificando cenários)...")
     conn = db.get_connection(str(ROOT / cfg["saida"]["banco_sqlite"]))
+
+    # Limpar banco e reinserir tudo do CSV — garante que o banco
+    # sempre reflita exatamente o CSV, sem acúmulo de versões antigas
+    conn.execute("DELETE FROM resultados")
+    conn.execute("DELETE FROM pesquisas")
+    conn.commit()
+    print("   Banco limpo — reinserindo do CSV...")
+
     inseridas = 0
     nao_classificadas = 0
     for p in novas:
