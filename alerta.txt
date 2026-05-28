@@ -57,4 +57,4 @@ Presidenciais no TSE: 311   |   Aprovadas: 85
   Data Povo                      BR-09123/2026        campo_fim: 2026-01-21  n=1.300  divulg: 2026-02-03
   100 Cidades                    BR-08233/2026        campo_fim: 2026-01-19  n=2.000  divulg: 2026-01-22
 
-Gerado: 28/05/2026 12:44
+Gerado: 28/05/2026 13:11
