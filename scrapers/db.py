@@ -26,12 +26,12 @@ def gerar_hash_pesquisa(
     registro_tse: Optional[str] = None,
     tipo: str = "",
 ) -> str:
-    # Incluir o tipo no hash para que cenários alternativos (estimulado 2, etc.)
-    # não colidam com o cenário principal
+    # Chave baseada em registro_tse + turno + tipo — garante unicidade real
+    # independente de pequenas variações nos campos (url, zeros, etc.)
     if registro_tse:
-        chave = f"TSE:{registro_tse}|T{turno}|{tipo}|{candidatos_str}"
+        chave = f"TSE:{registro_tse}|T{turno}|{tipo}"
     else:
-        chave = f"{instituto}|{data_fim_campo}|T{turno}|{tipo}|{amostra}|{candidatos_str}"
+        chave = f"{instituto}|{data_fim_campo}|T{turno}|{tipo}|{amostra}"
     return hashlib.sha256(chave.encode("utf-8")).hexdigest()[:16]
 
 
