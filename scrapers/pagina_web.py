@@ -197,7 +197,6 @@ def _preparar_dados_grafico(serie, top_n=5):
         "series":      series_js,
         "passo_dias":  serie.get("passo_dias", 7),
         "janela_dias": serie.get("janela_dias", 30),
-        "pesquisas_raw": [],  # preenchido depois via injetar_pesquisas_raw()
     }
 
 
@@ -229,10 +228,6 @@ def gerar_pagina_html(caminho, series_por_cenario, data_geracao=None, cenario_pr
     else:
         if slopes:
             dados["slopes"] = slopes
-        # Injetar pontos brutos direto do CSV (independente do banco)
-        dados["pesquisas_raw"] = _extrair_pontos_brutos(
-            dados["labels"], dados["passo_dias"]
-        )
         dados_json = json.dumps(dados, ensure_ascii=False, default=str)
 
     meses_pt = ["janeiro", "fevereiro", "março", "abril", "maio", "junho",
@@ -397,52 +392,6 @@ _TEMPLATE_HTML = r"""<!DOCTYPE html>
     return slope * (7 / DADOS.passo_dias);
   }
 
-  // Plugin: pontos brutos das pesquisas individuais
-  const pontosBrutos = {
-    id: 'pontosBrutos',
-    afterDatasetsDraw(chart) {
-      if (!DADOS.pesquisas_raw || !DADOS.pesquisas_raw.length) return;
-      const {ctx, scales:{x, y}} = chart;
-      const corPorCand = {};
-      DADOS.series.forEach(s => { corPorCand[s.label] = s.cor; });
-
-      ctx.save();
-      DADOS.pesquisas_raw.forEach(p => {
-        const cor = corPorCand[p.cand];
-        if (!cor) return;
-        const px = x.getPixelForValue(p.idx);
-        const py = y.getPixelForValue(p.val);
-        // Bolinha branca com borda colorida
-        ctx.beginPath();
-        ctx.arc(px, py, 4, 0, Math.PI * 2);
-        ctx.fillStyle = 'white';
-        ctx.fill();
-        ctx.strokeStyle = cor;
-        ctx.lineWidth = 1.5;
-        ctx.globalAlpha = 0.75;
-        ctx.stroke();
-        ctx.globalAlpha = 1;
-      });
-      ctx.restore();
-    }
-  };
-
-  // Tooltip com info da pesquisa ao passar o mouse
-  function tooltipPontoBruto(evt, chart) {
-    if (!DADOS.pesquisas_raw) return null;
-    const {left, top} = chart.canvas.getBoundingClientRect();
-    const mx = evt.clientX - left;
-    const my = evt.clientY - top;
-    const {scales:{x, y}} = chart;
-    for (const p of DADOS.pesquisas_raw) {
-      const px = x.getPixelForValue(p.idx);
-      const py = y.getPixelForValue(p.val);
-      if (Math.abs(px-mx) < 8 && Math.abs(py-my) < 8) {
-        return `${p.inst}: ${p.val}% (${p.data})`;
-      }
-    }
-    return null;
-  }
   const datasets = DADOS.series.map(s => ({
     label: s.label, data: s.dados,
     borderColor: s.cor, backgroundColor: s.cor,
@@ -501,7 +450,7 @@ _TEMPLATE_HTML = r"""<!DOCTYPE html>
   };
 
   new Chart(document.getElementById('grafico'),{
-    type:'line', data:{labels,datasets}, plugins:[faixa,setasFlutuantes,pontosBrutos],
+    type:'line', data:{labels,datasets}, plugins:[faixa,setasFlutuantes],
     options:{ responsive:true, maintainAspectRatio:false,
       layout:{padding:{right:120,top:8}},
       interaction:{mode:'index',intersect:false},
