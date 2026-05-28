@@ -197,7 +197,7 @@ def gerar_aba_todas_pesquisas(wb, todas_pesquisas):
 
     cols_meta = [
         "cenario", "instituto", "contratante", "data_inicio_campo",
-        "data_fim_campo", "amostra", "margem_erro", "turno",
+        "data_fim_campo", "amostra", "margem_erro", "turno","score",
         "metodologia", "votos_validos", "registro_tse", "url_fonte",
     ]
     cols = cols_meta + candidatos
