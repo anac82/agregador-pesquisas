@@ -6,10 +6,10 @@ import yaml
 import pandas as pd
 if __package__ is None or __package__ == "":
     sys.path.insert(0, str(Path(__file__).parent.parent))
-    from scrapers import db, coletores, ponderacao, pagina_web, ultimas_pesquisas
+    from scrapers import db, coletores, ponderacao, pagina_web
     from scrapers.excel_writer import gerar_excel
 else:
-    from . import db, coletores, ponderacao, pagina_web, ultimas_pesquisas
+    from . import db, coletores, ponderacao, pagina_web
     from .excel_writer import gerar_excel
 ROOT = Path(__file__).parent.parent
 def carregar_config():
@@ -18,12 +18,36 @@ def carregar_config():
 def carregar_pesos():
     df = pd.read_csv(ROOT / "data/pesos_institutos.csv")
     return dict(zip(df["instituto"], df["peso"]))
+def carregar_scores():
+    """Lê historico_tse.csv e retorna dict {protocolo: dict_de_campos}."""
+    path = ROOT / "data" / "historico_tse.csv"
+    if not path.exists():
+        return {}
+    cols_needed = ["NR_PROTOCOLO_REGISTRO", "score", "custo_reais",
+                   "custo_por_entrevistado", "flag_instituto_conhecido",
+                   "flag_nacional_explicito", "metodologia"]
+    df = pd.read_csv(path, usecols=lambda c: c in cols_needed)
+    resultado = {}
+    for _, row in df.iterrows():
+        proto = str(row["NR_PROTOCOLO_REGISTRO"])
+        resultado[proto] = {
+            "score":                    row.get("score"),
+            "custo_reais":              row.get("custo_reais"),
+            "custo_por_entrevistado":   row.get("custo_por_entrevistado"),
+            "flag_instituto_conhecido": row.get("flag_instituto_conhecido"),
+            "flag_nacional_explicito":  row.get("flag_nacional_explicito"),
+            "metodologia_tse":          row.get("metodologia"),
+        }
+    return resultado
+
 def main():
     print("=" * 60)
     print("AGREGADOR DE PESQUISAS — Eleições 2026 (v2)")
     print("=" * 60)
     cfg = carregar_config()
     pesos = carregar_pesos()
+    scores = carregar_scores()
+    print(f"→ {len(scores)} scores carregados do historico_tse.csv")
     cenarios = cfg["cenarios"]
     print(f"\n→ {len(cenarios)} cenários configurados:")
     for cen in cenarios:
@@ -77,6 +101,23 @@ def main():
     todas_pesquisas = []
     for cen in cenarios:
         todas_pesquisas.extend(db.listar_pesquisas(conn, cen["nome"]))
+
+    # Injetar campos do histórico em cada pesquisa via protocolo TSE
+    CAMPOS_HISTORICO = ["score", "custo_reais", "custo_por_entrevistado",
+                        "flag_instituto_conhecido", "flag_nacional_explicito",
+                        "metodologia_tse"]
+
+    def _injetar(lista):
+        for p in lista:
+            proto = p.get("registro_tse", "")
+            dados = scores.get(proto, {})
+            for campo in CAMPOS_HISTORICO:
+                p[campo] = dados.get(campo)
+
+    _injetar(todas_pesquisas)
+    for cen_pesquisas in pesquisas_por_cenario.values():
+        _injetar(cen_pesquisas)
+
     print("\n[4/4] Gerando Excel...")
     caminho = gerar_excel(
         str(ROOT / cfg["saida"]["arquivo_excel"]),
@@ -104,15 +145,11 @@ def main():
     # Gerar página web (GitHub Pages) se houver séries temporais
     if series_por_cenario:
         print("\n[+] Gerando página web (docs/index.html)...")
-        ultimas = ultimas_pesquisas.extrair_ultimas_pesquisas(
-            str(ROOT / "data/pesquisas_manuais.csv"), n=15
-        )
         caminho_html = pagina_web.gerar_pagina_html(
             str(ROOT / "docs/index.html"),
             series_por_cenario,
             data_geracao=date.today(),
             cenario_principal="1º Turno",
-            ultimas_pesquisas=ultimas,
         )
         print(f"    Página gerada: {caminho_html}")
 if __name__ == "__main__":
