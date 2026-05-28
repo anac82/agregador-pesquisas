@@ -70,12 +70,31 @@ def gerar_aba_cenario(wb, nome_cenario, agregacao, pesquisas_brutas, pesos_insti
 
     df = agregacao["detalhamento"]
     if not df.empty:
+        # Enriquecer o detalhamento com campos do histórico vindos das pesquisas brutas
+        CAMPOS_HIST = ["score", "metodologia_tse", "custo_reais",
+                       "custo_por_entrevistado", "flag_instituto_conhecido",
+                       "flag_nacional_explicito"]
+
+        # Montar lookup: (instituto, data_fim_campo) → campos histórico
+        lookup = {}
+        for p in pesquisas_brutas:
+            chave = (p.get("instituto"), str(p.get("data_fim_campo", "")))
+            lookup[chave] = {c: p.get(c) for c in CAMPOS_HIST}
+
+        for campo in CAMPOS_HIST:
+            df[campo] = df.apply(
+                lambda r: lookup.get((r["instituto"], str(r["data_fim_campo"])), {}).get(campo),
+                axis=1
+            )
+
         cols = [
             "instituto", "data_fim_campo", "amostra",
             "score", "metodologia_tse", "custo_reais",
             "custo_por_entrevistado", "flag_instituto_conhecido",
             "flag_nacional_explicito", "peso_final",
         ] + candidatos
+        # Só manter colunas que existem no df
+        cols = [c for c in cols if c in df.columns]
         df = df[cols].copy().sort_values("data_fim_campo", ascending=False)
 
         for j, col in enumerate(cols, start=1):
@@ -216,7 +235,7 @@ def gerar_aba_todas_pesquisas(wb, todas_pesquisas):
 
     for i, p in enumerate(todas_pesquisas, start=2):
         for j, col in enumerate(cols_meta, start=1):
-            c = ws.cell(row=i, column=j, value=p.get(col))
+            c = ws.cell(row=i, column=j, value=p.get(col))  # .get() nunca lança KeyError
             c.font = Font(name="Arial")
             c.border = THIN_BORDER
         for j, cand in enumerate(candidatos, start=len(cols_meta) + 1):
