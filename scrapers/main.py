@@ -153,11 +153,14 @@ def main():
     # Gerar página web (GitHub Pages) se houver séries temporais
     if series_por_cenario:
         print("\n[+] Gerando página web (docs/index.html)...")
+        from scrapers.ultimas_pesquisas import extrair_ultimas_pesquisas
+        ultimas = extrair_ultimas_pesquisas(str(ROOT / "data/pesquisas_manuais.csv"))
         caminho_html = pagina_web.gerar_pagina_html(
             str(ROOT / "docs/index.html"),
             series_por_cenario,
             data_geracao=date.today(),
             cenario_principal="1º Turno",
+            ultimas_pesquisas=ultimas,
         )
         print(f"    Página gerada: {caminho_html}")
 if __name__ == "__main__":
