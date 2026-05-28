@@ -52,28 +52,34 @@ def protos_manuais(rows: list[dict]) -> set:
 
 
 def ler_pendentes() -> list[dict]:
-    """Lê historico_tse.csv e retorna pesquisas aprovadas sem dados no manuais."""
-    if not HISTORICO.exists():
+    """
+    Retorna pesquisas para buscar, em ordem de prioridade:
+    1. Novas no TSE hoje (do novas_pendentes.json gerado pelo monitor_tse.py)
+       → só busca as que ainda não estão no manuais
+    2. Se não há novas, retorna lista vazia (não reprocessa antigas)
+    """
+    novas_path = ROOT / "data" / "novas_pendentes.json"
+    if not novas_path.exists():
+        log.info("  novas_pendentes.json não encontrado — nada a buscar.")
         return []
-    with open(HISTORICO, encoding="utf-8") as f:
-        hist = list(csv.DictReader(f))
 
+    dados = json.loads(novas_path.read_text(encoding="utf-8"))
+    novas = dados.get("novas", [])
+
+    if not novas:
+        log.info("  Nenhuma pesquisa nova no TSE hoje — nada a buscar.")
+        return []
+
+    # Filtrar as que ainda não estão no manuais
     rows, _ = ler_manuais()
     protos  = protos_manuais(rows)
 
-    pendentes = []
-    vistas    = set()
-    for r in hist:
-        proto = r.get("NR_PROTOCOLO_REGISTRO", "").strip()
-        if not proto or proto in vistas:
-            continue
-        vistas.add(proto)
-        if r.get("usa_no_agregador", "").strip().lower() in ("true", "1") \
-                and proto not in protos:
-            pendentes.append(r)
+    pendentes = [
+        p for p in novas
+        if p.get("NR_PROTOCOLO_REGISTRO", "") not in protos
+    ]
 
-    # Ordenar do mais recente para o mais antigo
-    pendentes.sort(key=lambda r: r.get("campo_fim", ""), reverse=True)
+    log.info(f"  Novas no TSE hoje: {len(novas)} | Faltam no manuais: {len(pendentes)}")
     return pendentes
 
 
