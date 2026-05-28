@@ -33,87 +33,6 @@ def _to_date(v):
     return v
 
 
-def _extrair_pontos_brutos(labels_ddmm: list, passo_dias: int) -> list:
-    """
-    Lê pesquisas_manuais.csv e retorna pontos brutos para plotagem.
-    Cada ponto: {idx, cand, val, inst, data}
-    idx = índice no eixo X do gráfico (corresponde ao label mais próximo)
-    """
-    import csv as csvmod
-    from pathlib import Path
-
-    csv_path = Path(__file__).parent.parent / "data" / "pesquisas_manuais.csv"
-    if not csv_path.exists():
-        return []
-
-    CANDS = ["Lula", "Flávio", "Zema", "Caiado", "Renan"]
-    meses = {"jan":1,"fev":2,"mar":3,"abr":4,"mai":5,"jun":6,
-             "jul":7,"ago":8,"set":9,"out":10,"nov":11,"dez":12}
-
-    # Converter labels "dd/mmm" → índices
-    # labels[0] é o ponto mais antigo
-    def label_to_date(lbl):
-        d, m = lbl.split("/")
-        return date(2026, meses[m], int(d))
-
-    if not labels_ddmm:
-        return []
-
-    data_inicio = label_to_date(labels_ddmm[0])
-
-    resultado = []
-    vistos = set()
-
-    try:
-        with open(csv_path, encoding="utf-8") as f:
-            reader = csvmod.DictReader(f)
-            for row in reader:
-                if str(row.get("turno","")).strip() != "1":
-                    continue
-                if str(row.get("tipo","")).strip().lower() != "estimulado":
-                    continue
-                data_str = str(row.get("data_fim_campo","")).strip()[:10]
-                if not data_str:
-                    continue
-                try:
-                    data_pesq = date.fromisoformat(data_str)
-                except ValueError:
-                    continue
-
-                idx = round((data_pesq - data_inicio).days / passo_dias)
-                if idx < 0 or idx >= len(labels_ddmm):
-                    continue
-
-                inst = str(row.get("instituto","")).strip()
-                reg  = str(row.get("registro_tse","")).strip()
-
-                for cand in CANDS:
-                    val_str = str(row.get(cand,"")).strip()
-                    if not val_str or val_str in ("nan",""):
-                        continue
-                    try:
-                        val = float(val_str)
-                    except ValueError:
-                        continue
-                    if val <= 0:
-                        continue
-                    chave = (reg, cand)
-                    if chave in vistos:
-                        continue
-                    vistos.add(chave)
-                    resultado.append({
-                        "idx":  idx,
-                        "cand": cand,
-                        "val":  round(val, 1),
-                        "inst": inst,
-                        "data": data_str,
-                    })
-    except Exception:
-        return []
-
-    return resultado
-
-
 def _preparar_dados_grafico(serie, top_n=5):
     """Converte a série temporal no formato que o JavaScript do gráfico espera."""
     pontos = serie.get("pontos", [])
@@ -228,7 +147,7 @@ def gerar_pagina_html(caminho, series_por_cenario, data_geracao=None, cenario_pr
     else:
         if slopes:
             dados["slopes"] = slopes
-        dados_json = json.dumps(dados, ensure_ascii=False, default=str)
+        dados_json = json.dumps(dados, ensure_ascii=False)
 
     meses_pt = ["janeiro", "fevereiro", "março", "abril", "maio", "junho",
                 "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"]
