@@ -60,7 +60,7 @@ def _preparar_dados_grafico(serie, top_n=5):
         reverse=True,
     )[:top_n]
 
-    # Montar séries de dados
+    # Montar séries de dados (linha ponderada)
     series_js = []
     for cand in candidatos:
         dados = []
@@ -71,15 +71,36 @@ def _preparar_dados_grafico(serie, top_n=5):
             "label": cand,
             "cor": CORES_CANDIDATOS.get(cand, COR_PADRAO),
             "dados": dados,
-            # linha mais grossa para os 2 primeiros (favoritos)
             "largura": 3.5 if cand in candidatos[:2] else 2,
         })
 
+    # Montar pontos brutos das pesquisas individuais
+    # Formato: [{x: "dd/mês", y: valor, cand: "Lula", inst: "Datafolha", data_iso: "2026-05-14"}]
+    pesquisas_raw = []
+    passo = serie.get("passo_dias", 7)
+    data_inicio = _to_date(pontos[0]["data"])
+
+    for pt in pontos:
+        data_pt = _to_date(pt["data"])
+        idx = round((data_pt - data_inicio).days / passo)
+        for pesq in pt.get("pesquisas", []):
+            for cand in candidatos:
+                val = pesq.get("resultados", {}).get(cand)
+                if val is not None and val > 0:
+                    pesquisas_raw.append({
+                        "idx":  idx,
+                        "cand": cand,
+                        "val":  round(float(val), 1),
+                        "inst": pesq.get("instituto", ""),
+                        "data": str(_to_date(pesq.get("data_fim_campo", pt["data"])))[:10],
+                    })
+
     return {
-        "labels": labels,
-        "series": series_js,
-        "passo_dias": serie.get("passo_dias", 7),
-        "janela_dias": serie.get("janela_dias", 30),
+        "labels":        labels,
+        "series":        series_js,
+        "passo_dias":    passo,
+        "janela_dias":   serie.get("janela_dias", 30),
+        "pesquisas_raw": pesquisas_raw,
     }
 
 
@@ -276,7 +297,52 @@ _TEMPLATE_HTML = r"""<!DOCTYPE html>
     return slope * (7 / DADOS.passo_dias);
   }
 
-  const labels = DADOS.labels;
+  // Plugin: pontos brutos das pesquisas individuais
+  const pontosBrutos = {
+    id: 'pontosBrutos',
+    afterDatasetsDraw(chart) {
+      if (!DADOS.pesquisas_raw || !DADOS.pesquisas_raw.length) return;
+      const {ctx, scales:{x, y}} = chart;
+      const corPorCand = {};
+      DADOS.series.forEach(s => { corPorCand[s.label] = s.cor; });
+
+      ctx.save();
+      DADOS.pesquisas_raw.forEach(p => {
+        const cor = corPorCand[p.cand];
+        if (!cor) return;
+        const px = x.getPixelForValue(p.idx);
+        const py = y.getPixelForValue(p.val);
+        // Bolinha branca com borda colorida
+        ctx.beginPath();
+        ctx.arc(px, py, 4, 0, Math.PI * 2);
+        ctx.fillStyle = 'white';
+        ctx.fill();
+        ctx.strokeStyle = cor;
+        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = 0.75;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      });
+      ctx.restore();
+    }
+  };
+
+  // Tooltip com info da pesquisa ao passar o mouse
+  function tooltipPontoBruto(evt, chart) {
+    if (!DADOS.pesquisas_raw) return null;
+    const {left, top} = chart.canvas.getBoundingClientRect();
+    const mx = evt.clientX - left;
+    const my = evt.clientY - top;
+    const {scales:{x, y}} = chart;
+    for (const p of DADOS.pesquisas_raw) {
+      const px = x.getPixelForValue(p.idx);
+      const py = y.getPixelForValue(p.val);
+      if (Math.abs(px-mx) < 8 && Math.abs(py-my) < 8) {
+        return `${p.inst}: ${p.val}% (${p.data})`;
+      }
+    }
+    return null;
+  }
   const datasets = DADOS.series.map(s => ({
     label: s.label, data: s.dados,
     borderColor: s.cor, backgroundColor: s.cor,
@@ -335,7 +401,7 @@ _TEMPLATE_HTML = r"""<!DOCTYPE html>
   };
 
   new Chart(document.getElementById('grafico'),{
-    type:'line', data:{labels,datasets}, plugins:[faixa,setasFlutuantes],
+    type:'line', data:{labels,datasets}, plugins:[faixa,setasFlutuantes,pontosBrutos],
     options:{ responsive:true, maintainAspectRatio:false,
       layout:{padding:{right:120,top:8}},
       interaction:{mode:'index',intersect:false},
