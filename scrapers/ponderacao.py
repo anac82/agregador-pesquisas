@@ -4,6 +4,21 @@ from datetime import date, datetime, timedelta
 from typing import Optional
 import pandas as pd
 
+# Pesos por metodologia — refletem qualidade relativa de cobertura
+# presencial > telefone > online > URA
+PESOS_METODOLOGIA = {
+    "presencial": 1.00,
+    "telefone":   0.90,
+    "telefonica": 0.90,
+    "telefônica": 0.90,
+    "cati":       0.90,
+    "online":     0.80,
+    "web":        0.80,
+    "ura":        0.65,
+    "robocall":   0.65,
+    "automatizado": 0.65,
+}
+
 
 def calcular_peso_recencia(
     data_fim_campo,
@@ -21,7 +36,18 @@ def calcular_peso_recencia(
 def calcular_peso_amostra(amostra: int, amostra_referencia: int = 2000) -> float:
     if amostra <= 0:
         return 0.0
-    return math.sqrt(amostra / amostra_referencia)
+    # Cap em 3x a referência para evitar que amostras muito grandes dominem
+    amostra_cap = min(amostra, amostra_referencia * 3)
+    return math.sqrt(amostra_cap / amostra_referencia)
+
+
+def calcular_peso_metodologia(metodologia: str) -> float:
+    if not metodologia:
+        return 1.0
+    # Normalizar: minúsculas, sem acentos simples, pegar primeira palavra
+    # Ex: "URA (telefone)" → "ura", "telefônica" → "telefônica"
+    chave = metodologia.lower().strip().split()[0] if metodologia.strip() else ""
+    return PESOS_METODOLOGIA.get(chave, 1.0)
 
 
 def calcular_peso_final(
@@ -31,6 +57,7 @@ def calcular_peso_final(
     data_referencia: date,
 ) -> float:
     peso_inst = pesos_institutos.get(pesquisa["instituto"], 1.0)
+
     peso_rec = 1.0
     if config["ponderacao"]["recencia"]["ativo"]:
         peso_rec = calcular_peso_recencia(
@@ -38,13 +65,18 @@ def calcular_peso_final(
             data_referencia,
             config["ponderacao"]["recencia"]["half_life_dias"],
         )
+
     peso_amo = 1.0
     if config["ponderacao"]["amostra"]["ativo"]:
         peso_amo = calcular_peso_amostra(
             pesquisa["amostra"],
             config["ponderacao"]["amostra"]["amostra_referencia"],
         )
-    return peso_inst * peso_rec * peso_amo
+
+    # Peso de metodologia — sempre ativo
+    peso_metod = calcular_peso_metodologia(pesquisa.get("metodologia", ""))
+
+    return peso_inst * peso_rec * peso_amo * peso_metod
 
 
 def agregar(
@@ -167,16 +199,18 @@ def agregar_serie_temporal(
         if na_janela:
             ag = agregar(na_janela, pesos_institutos, config, data_referencia=data_ref)
             pontos.append({
-                "data": data_ref,
-                "medias": ag["medias"],
+                "data":        data_ref,
+                "medias":      ag["medias"],
                 "n_pesquisas": ag["n_pesquisas"],
+                "pesquisas":   na_janela,
             })
         else:
             # Sem pesquisas na janela: ponto vazio (mantém continuidade do eixo)
             pontos.append({
-                "data": data_ref,
-                "medias": {},
+                "data":        data_ref,
+                "medias":      {},
                 "n_pesquisas": 0,
+                "pesquisas":   [],
             })
         data_ref += timedelta(days=passo_dias)
 
