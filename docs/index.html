@@ -66,32 +66,42 @@
     return;
   }
 
-  function seta(delta){
-    if (delta > 2)    return {s:'\u21C8', cl:'#1D9E75'};
-    if (delta > 0.5)  return {s:'\u2191', cl:'#1D9E75'};
-    if (delta >= -0.5)return {s:'\u2192', cl:'#888780'};
-    if (delta >= -2)  return {s:'\u2193', cl:'#D85A30'};
+  function seta(slopePerWeek){
+    // slope em pp/semana
+    if (slopePerWeek >  1.0) return {s:'\u21C8', cl:'#1D9E75'};
+    if (slopePerWeek >  0.3) return {s:'\u2191', cl:'#1D9E75'};
+    if (slopePerWeek >= -0.3)return {s:'\u2192', cl:'#888780'};
+    if (slopePerWeek >= -1.0)return {s:'\u2193', cl:'#D85A30'};
     return {s:'\u21CA', cl:'#C0392B'};
   }
   function lastIdx(a){ for(let i=a.length-1;i>=0;i--) if(a[i]!=null) return i; return -1; }
 
-  // Calcula média dos valores não-nulos numa janela [i-janela+1 .. i]
-  function mediaJanela(a, i, janela){
-    let soma=0, n=0;
-    for(let j=Math.max(0,i-janela+1); j<=i; j++){
-      if(a[j]!=null){ soma+=a[j]; n++; }
+  // Regressão linear ponderada — calcula inclinação em pp/semana
+  // Usa os últimos maxPontos pontos não-nulos, com peso decrescente por recência
+  function slopeRegPonderada(dados, labels, idxAtual, maxPontos){
+    const pts = [];
+    for(let i=idxAtual; i>=0 && pts.length<maxPontos; i--){
+      if(dados[i]==null) continue;
+      pts.push({x: i, y: dados[i]});
     }
-    return n>0 ? soma/n : null;
-  }
+    if(pts.length < 3) return 0;  // pontos demais faltando
 
-  // Tendência: média das últimas 2 semanas vs média das 2 semanas anteriores
-  // Isso reduz o ruído de pontos isolados
-  function calcDelta(a, idxAtual, pontosPorSemana){
-    const meia = Math.max(1, Math.round(pontosPorSemana * 2));  // 2 semanas em pontos
-    const m_recente  = mediaJanela(a, idxAtual, meia);
-    const m_anterior = mediaJanela(a, Math.max(0, idxAtual - meia), meia);
-    if (m_recente == null || m_anterior == null) return 0;
-    return m_recente - m_anterior;
+    // Peso = decaimento exponencial por posição (mais recente = mais peso)
+    const n = pts.length;
+    let sw=0, swx=0, swy=0, swxx=0, swxy=0;
+    pts.forEach((p, idx) => {
+      const w = Math.exp(-0.05 * idx);  // mais recente = idx 0 = peso 1
+      sw   += w;
+      swx  += w * p.x;
+      swy  += w * p.y;
+      swxx += w * p.x * p.x;
+      swxy += w * p.x * p.y;
+    });
+    const denom = sw*swxx - swx*swx;
+    if(Math.abs(denom) < 1e-10) return 0;
+    const slope = (sw*swxy - swx*swy) / denom;
+    // Converter de pp/ponto para pp/semana
+    return slope * (7 / DADOS.passo_dias);
   }
 
   const labels = DADOS.labels;
@@ -129,9 +139,9 @@
       DADOS.series.forEach(s=>{
         const i=lastIdx(s.dados); if(i<0) return;
         const atual=s.dados[i];
-        const pontosPorSemana = Math.max(1, Math.round(7 / DADOS.passo_dias));
-        const delta=calcDelta(s.dados, i, pontosPorSemana);
-        const t=seta(delta);
+        const maxPontos = Math.max(6, Math.round(60 / DADOS.passo_dias)); // últimos ~60 dias
+        const slope = slopeRegPonderada(s.dados, labels, i, maxPontos);
+        const t=seta(slope);
         const yLinha=y.getPixelForValue(atual);
         let ySeta=yLinha-22; if(ySeta<top+8) ySeta=top+8;
         usadosSeta.forEach(u=>{ if(Math.abs(u-ySeta)<18) ySeta=u-18; }); usadosSeta.push(ySeta);
@@ -164,7 +174,7 @@
     }
   });
 
-  legendaEl.innerHTML = 'A seta acima de cada linha resume a <b style="font-weight:500;color:#666">tendência nas últimas 4 semanas</b> (faixa cinza): ' +
+  legendaEl.innerHTML = 'A seta indica a <b style="font-weight:500;color:#666">tendência por regressão linear ponderada</b> nos últimos 60 dias: ' +
     '<span style="color:#1D9E75">&#8648; forte alta</span> · ' +
     '<span style="color:#1D9E75">&#8593; alta</span> · ' +
     '<span style="color:#888780">&#8594; estável</span> · ' +
