@@ -1,4 +1,5 @@
 """Camada de banco de dados (v2)."""
+
 import sqlite3
 import hashlib
 from pathlib import Path
@@ -23,32 +24,48 @@ def gerar_hash_pesquisa(
     amostra: int,
     candidatos_str: str = "",
     registro_tse: Optional[str] = None,
+    tipo: str = "",
 ) -> str:
+    # Incluir o tipo no hash para que cenários alternativos (estimulado 2, etc.)
+    # não colidam com o cenário principal
     if registro_tse:
-        chave = f"TSE:{registro_tse}|T{turno}|{candidatos_str}"
+        chave = f"TSE:{registro_tse}|T{turno}|{tipo}|{candidatos_str}"
     else:
-        chave = f"{instituto}|{data_fim_campo}|T{turno}|{amostra}|{candidatos_str}"
+        chave = f"{instituto}|{data_fim_campo}|T{turno}|{tipo}|{amostra}|{candidatos_str}"
     return hashlib.sha256(chave.encode("utf-8")).hexdigest()[:16]
 
 
 def classificar_cenario(pesquisa: dict, cenarios_config: list) -> Optional[str]:
     """
-    Decide a qual cenário uma pesquisa pertence, baseado em turno + candidatos.
+    Decide a qual cenário uma pesquisa pertence.
+
+    Turno 1:
+        - Só aceita tipo exatamente igual a "estimulado"
+        - Tipos alternativos (estimulado 2, sem Flávio, com Tarcísio, etc.)
+          são registrados no banco mas NÃO entram no agregador do 1º turno
+
+    Turno 2:
+        - Classifica pelo par de candidatos (filtro_candidatos no config)
+        - Aceita exatamente 2 candidatos reais (sem Branco/Nulo/Não sabe)
     """
     turno = int(pesquisa.get("turno", 1))
+    tipo  = str(pesquisa.get("tipo", "")).strip().lower()
     resultados = pesquisa.get("resultados", {})
-
     candidatos_reais = [
         c for c, v in resultados.items()
         if v and v > 0 and c not in ("Branco/Nulo", "Não sabe", "Outros")
     ]
 
     if turno == 1:
+        # Só o cenário principal (tipo == "estimulado") entra no 1º Turno
+        if tipo != "estimulado":
+            return None
         for cen in cenarios_config:
             if cen["turno"] == 1:
                 return cen["nome"]
         return None
 
+    # Turno 2: classificar pelo par de candidatos
     for cen in cenarios_config:
         if cen["turno"] != 2:
             continue
@@ -57,6 +74,7 @@ def classificar_cenario(pesquisa: dict, cenarios_config: list) -> Optional[str]:
             continue
         if filtro.issubset(set(candidatos_reais)) and len(candidatos_reais) <= 2:
             return cen["nome"]
+
     return None
 
 
@@ -70,6 +88,8 @@ def inserir_pesquisa(
         return None
 
     candidatos_str = ",".join(sorted(pesquisa["resultados"].keys()))
+    tipo = pesquisa.get("tipo", "estimulada")
+
     hash_unico = gerar_hash_pesquisa(
         pesquisa["instituto"],
         pesquisa["data_fim_campo"],
@@ -77,6 +97,7 @@ def inserir_pesquisa(
         pesquisa["amostra"],
         candidatos_str,
         pesquisa.get("registro_tse"),
+        tipo=tipo,
     )
 
     existing = conn.execute(
@@ -102,7 +123,7 @@ def inserir_pesquisa(
             pesquisa.get("margem_erro"),
             pesquisa.get("intervalo_confianca", 95.0),
             cenario,
-            pesquisa.get("tipo", "estimulada"),
+            tipo,
             int(pesquisa.get("turno", 1)),
             pesquisa.get("metodologia"),
             int(pesquisa.get("votos_validos", 0)),
