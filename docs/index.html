@@ -52,7 +52,7 @@
       <ul style='font-size:11px; color:#999; margin-top:4px; margin-bottom:0;'><li><strong>Nexus/FSB</strong> (22 de mai, n=2045) <code>BR-04193/2026</code></li><li><strong>Datafolha</strong> (20 de mai, n=2004) <code>BR-07489/2026</code></li><li><strong>Gerp</strong> (19 de mai, n=2000) <code>BR-07971/2026</code></li><li><strong>Vox Brasil</strong> (17 de mai, n=2100) <code>BR-02416/2026</code></li><li><strong>AtlasIntel</strong> (13 de mai, n=5032) <code>BR-06939/2026</code></li><li><strong>Datafolha</strong> (12 de mai, n=2004) <code>BR-00290/2026</code></li><li><strong>Gerp</strong> (8 de mai, n=2000) <code>BR-03369/2026</code></li><li><strong>Quaest</strong> (8 de mai, n=2004) <code>BR-03598/2026</code></li><li><strong>Futura Inteligência</strong> (4 de mai, n=2000) <code>BR-03678/2026</code></li><li><strong>Real Time Big Data</strong> (2 de mai, n=2000) <code>BR-03627/2026</code></li></ul>
     </details>
   </div>
- 
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
@@ -74,7 +74,25 @@
     return {s:'\u21CA', cl:'#C0392B'};
   }
   function lastIdx(a){ for(let i=a.length-1;i>=0;i--) if(a[i]!=null) return i; return -1; }
-  function valAgo(a,idx,b){ let j=idx-b; while(j>=0&&a[j]==null) j--; return j>=0?a[j]:a[idx]; }
+
+  // Calcula média dos valores não-nulos numa janela [i-janela+1 .. i]
+  function mediaJanela(a, i, janela){
+    let soma=0, n=0;
+    for(let j=Math.max(0,i-janela+1); j<=i; j++){
+      if(a[j]!=null){ soma+=a[j]; n++; }
+    }
+    return n>0 ? soma/n : null;
+  }
+
+  // Tendência: média das últimas 2 semanas vs média das 2 semanas anteriores
+  // Isso reduz o ruído de pontos isolados
+  function calcDelta(a, idxAtual, pontosPorSemana){
+    const meia = Math.max(1, Math.round(pontosPorSemana * 2));  // 2 semanas em pontos
+    const m_recente  = mediaJanela(a, idxAtual, meia);
+    const m_anterior = mediaJanela(a, Math.max(0, idxAtual - meia), meia);
+    if (m_recente == null || m_anterior == null) return 0;
+    return m_recente - m_anterior;
+  }
 
   const labels = DADOS.labels;
   const datasets = DADOS.series.map(s => ({
@@ -110,7 +128,10 @@
       const usadosSeta=[]; const usadosNome=[];
       DADOS.series.forEach(s=>{
         const i=lastIdx(s.dados); if(i<0) return;
-        const atual=s.dados[i]; const delta=atual-valAgo(s.dados,i,passoPontos4sem); const t=seta(delta);
+        const atual=s.dados[i];
+        const pontosPorSemana = Math.max(1, Math.round(7 / DADOS.passo_dias));
+        const delta=calcDelta(s.dados, i, pontosPorSemana);
+        const t=seta(delta);
         const yLinha=y.getPixelForValue(atual);
         let ySeta=yLinha-22; if(ySeta<top+8) ySeta=top+8;
         usadosSeta.forEach(u=>{ if(Math.abs(u-ySeta)<18) ySeta=u-18; }); usadosSeta.push(ySeta);
