@@ -367,6 +367,30 @@ def run():
     hist_novo.to_csv(HISTORICO, index=False, encoding="utf-8")
     log.info(f"  historico_tse.csv atualizado: {len(hist_novo)} pesquisas")
 
+    # Salvar lista de novas aprovadas para o buscar_resultados.py usar
+    novas_aprovadas = df[
+        df["usa_no_agregador"] &
+        ~df["NR_PROTOCOLO_REGISTRO"].astype(str).isin(protos_hist)
+    ].drop_duplicates("NR_PROTOCOLO_REGISTRO")
+
+    novas_path = ROOT / "data" / "novas_pendentes.json"
+    novas_list = []
+    for _, r in novas_aprovadas.iterrows():
+        novas_list.append({
+            "NR_PROTOCOLO_REGISTRO": str(r["NR_PROTOCOLO_REGISTRO"]),
+            "instituto":   str(r["instituto"]),
+            "campo_inicio":str(r["campo_inicio"]),
+            "campo_fim":   str(r["campo_fim"]),
+            "divulgacao":  str(r["divulgacao"]),
+            "QT_ENTREVISTADO": int(r["QT_ENTREVISTADO"]) if pd.notna(r["QT_ENTREVISTADO"]) else 0,
+            "metodologia": str(r["metodologia"]),
+        })
+    novas_path.write_text(
+        json.dumps({"data": str(HOJE), "novas": novas_list}, ensure_ascii=False, indent=2),
+        encoding="utf-8"
+    )
+    log.info(f"  novas_pendentes.json: {len(novas_list)} pesquisa(s) nova(s) aprovada(s)")
+
     # Gerar alerta
     alerta, tem_novas = gerar_alerta(df, protos_hist, protos_manuais)
     ALERTA.write_text(alerta, encoding="utf-8")
