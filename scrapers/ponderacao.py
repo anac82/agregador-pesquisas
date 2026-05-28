@@ -66,17 +66,24 @@ def calcular_peso_final(
             config["ponderacao"]["recencia"]["half_life_dias"],
         )
 
-    peso_amo = 1.0
-    if config["ponderacao"]["amostra"]["ativo"]:
-        peso_amo = calcular_peso_amostra(
-            pesquisa["amostra"],
-            config["ponderacao"]["amostra"]["amostra_referencia"],
+    # Usar score do historico_tse se disponível
+    # score já embute: amostra + metodologia + custo/entrevistado
+    # Se não disponível, fallback para peso_amostra × peso_metodologia
+    score = pesquisa.get("score")
+    if score and float(score) > 0:
+        peso_qualidade = float(score)
+    else:
+        peso_amo = 1.0
+        if config["ponderacao"]["amostra"]["ativo"]:
+            peso_amo = calcular_peso_amostra(
+                pesquisa["amostra"],
+                config["ponderacao"]["amostra"]["amostra_referencia"],
+            )
+        peso_qualidade = peso_amo * calcular_peso_metodologia(
+            pesquisa.get("metodologia", "")
         )
 
-    # Peso de metodologia — sempre ativo
-    peso_metod = calcular_peso_metodologia(pesquisa.get("metodologia", ""))
-
-    return peso_inst * peso_rec * peso_amo * peso_metod
+    return peso_inst * peso_rec * peso_qualidade
 
 
 def agregar(
