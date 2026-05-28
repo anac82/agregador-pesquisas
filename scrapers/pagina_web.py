@@ -83,13 +83,14 @@ def _preparar_dados_grafico(serie, top_n=5):
     }
 
 
-def gerar_pagina_html(caminho, series_por_cenario, data_geracao=None, cenario_principal="1º Turno", ultimas_pesquisas=None):
+def gerar_pagina_html(caminho, series_por_cenario, data_geracao=None, cenario_principal="1º Turno", ultimas_pesquisas=None, slopes=None):
     """
     Gera a página HTML com o gráfico de evolução.
 
     series_por_cenario: dict {nome_cenario: serie_temporal}
     cenario_principal: qual cenário mostrar no gráfico (default: 1º Turno)
     ultimas_pesquisas: list de dicts com {instituto, data, amostra, registro_tse}
+    slopes: dict {candidato: slope_pp_por_semana} — pré-calculado no Python
     """
     if data_geracao is None:
         data_geracao = date.today()
@@ -97,7 +98,6 @@ def gerar_pagina_html(caminho, series_por_cenario, data_geracao=None, cenario_pr
     # Pegar a série do cenário principal (ou a primeira disponível)
     serie = series_por_cenario.get(cenario_principal)
     if serie is None or not serie.get("pontos"):
-        # fallback: primeira série com pontos
         for nome, s in series_por_cenario.items():
             if s and s.get("pontos"):
                 serie = s
@@ -109,6 +109,9 @@ def gerar_pagina_html(caminho, series_por_cenario, data_geracao=None, cenario_pr
     if dados is None:
         dados_json = "null"
     else:
+        # Injetar slopes pré-calculados
+        if slopes:
+            dados["slopes"] = slopes
         dados_json = json.dumps(dados, ensure_ascii=False)
 
     meses_pt = ["janeiro", "fevereiro", "março", "abril", "maio", "junho",
@@ -308,8 +311,13 @@ _TEMPLATE_HTML = r"""<!DOCTYPE html>
       DADOS.series.forEach(s=>{
         const i=lastIdx(s.dados); if(i<0) return;
         const atual=s.dados[i];
-        const maxPontos = Math.max(6, Math.round(60 / DADOS.passo_dias)); // últimos ~60 dias
-        const slope = slopeRegPonderada(s.dados, labels, i, maxPontos);
+        let slope;
+        if (DADOS.slopes && DADOS.slopes[s.label] !== undefined) {
+          slope = DADOS.slopes[s.label];  // pré-calculado no Python
+        } else {
+          const maxPontos = Math.max(6, Math.round(60 / DADOS.passo_dias));
+          slope = slopeRegPonderada(s.dados, labels, i, maxPontos);
+        }
         const t=seta(slope);
         const yLinha=y.getPixelForValue(atual);
         let ySeta=yLinha-22; if(ySeta<top+8) ySeta=top+8;
