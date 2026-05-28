@@ -82,6 +82,53 @@ def _preparar_dados_grafico(serie, top_n=5):
         "janela_dias": serie.get("janela_dias", 30),
     }
 
+
+def gerar_pagina_html(caminho, series_por_cenario, data_geracao=None, cenario_principal="1º Turno", ultimas_pesquisas=None):
+    """
+    Gera a página HTML com o gráfico de evolução.
+
+    series_por_cenario: dict {nome_cenario: serie_temporal}
+    cenario_principal: qual cenário mostrar no gráfico (default: 1º Turno)
+    ultimas_pesquisas: list de dicts com {instituto, data, amostra, registro_tse}
+    """
+    if data_geracao is None:
+        data_geracao = date.today()
+
+    # Pegar a série do cenário principal (ou a primeira disponível)
+    serie = series_por_cenario.get(cenario_principal)
+    if serie is None or not serie.get("pontos"):
+        # fallback: primeira série com pontos
+        for nome, s in series_por_cenario.items():
+            if s and s.get("pontos"):
+                serie = s
+                cenario_principal = nome
+                break
+
+    dados = _preparar_dados_grafico(serie) if serie else None
+
+    if dados is None:
+        dados_json = "null"
+    else:
+        dados_json = json.dumps(dados, ensure_ascii=False)
+
+    meses_pt = ["janeiro", "fevereiro", "março", "abril", "maio", "junho",
+                "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"]
+    data_fmt = f"{data_geracao.day} de {meses_pt[data_geracao.month - 1]} de {data_geracao.year}"
+
+    # Formatar últimas pesquisas
+    html_pesquisas = _formatar_ultimas_pesquisas(ultimas_pesquisas or [])
+
+    html = _TEMPLATE_HTML.replace("{{DADOS_JSON}}", dados_json)
+    html = html.replace("{{CENARIO}}", cenario_principal)
+    html = html.replace("{{DATA_GERACAO}}", data_fmt)
+    html = html.replace("{{ULTIMAS_PESQUISAS}}", html_pesquisas)
+
+    Path(caminho).parent.mkdir(parents=True, exist_ok=True)
+    with open(caminho, "w", encoding="utf-8") as f:
+        f.write(html)
+    return caminho
+
+
 def _formatar_ultimas_pesquisas(pesquisas):
     """Formata as últimas pesquisas para exibição no rodapé."""
     if not pesquisas:
@@ -118,52 +165,6 @@ def _formatar_ultimas_pesquisas(pesquisas):
         return "<ul style='font-size:11px; color:#999; margin-top:4px; margin-bottom:0;'>" + \
                "".join(linhas) + "</ul>"
     return ""
-
-
-
-def gerar_pagina_html(caminho, series_por_cenario, data_geracao=None, cenario_principal="1º Turno", ultimas_pesquisas=None):
-    """
-    Gera a página HTML com o gráfico de evolução.
-
-    series_por_cenario: dict {nome_cenario: serie_temporal}
-    cenario_principal: qual cenário mostrar no gráfico (default: 1º Turno)
-    """
-    if data_geracao is None:
-        data_geracao = date.today()
-
-    # Pegar a série do cenário principal (ou a primeira disponível)
-    serie = series_por_cenario.get(cenario_principal)
-    if serie is None or not serie.get("pontos"):
-        # fallback: primeira série com pontos
-        for nome, s in series_por_cenario.items():
-            if s and s.get("pontos"):
-                serie = s
-                cenario_principal = nome
-                break
-
-    dados = _preparar_dados_grafico(serie) if serie else None
-
-    if dados is None:
-        dados_json = "null"
-    else:
-        dados_json = json.dumps(dados, ensure_ascii=False)
-
-    meses_pt = ["janeiro", "fevereiro", "março", "abril", "maio", "junho",
-                "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"]
-    data_fmt = f"{data_geracao.day} de {meses_pt[data_geracao.month - 1]} de {data_geracao.year}"
-
-    # Formatar últimas pesquisas
-    html_pesquisas = _formatar_ultimas_pesquisas(ultimas_pesquisas or [])
- 
-    html = _TEMPLATE_HTML.replace("{{DADOS_JSON}}", dados_json)
-    html = html.replace("{{CENARIO}}", cenario_principal)
-    html = html.replace("{{DATA_GERACAO}}", data_fmt)
-    html = html.replace("{{ULTIMAS_PESQUISAS}}", html_pesquisas)
-
-    Path(caminho).parent.mkdir(parents=True, exist_ok=True)
-    with open(caminho, "w", encoding="utf-8") as f:
-        f.write(html)
-    return caminho
 
 
 _TEMPLATE_HTML = r"""<!DOCTYPE html>
@@ -220,7 +221,7 @@ _TEMPLATE_HTML = r"""<!DOCTYPE html>
       {{ULTIMAS_PESQUISAS}}
     </details>
   </div>
- 
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
@@ -242,7 +243,25 @@ _TEMPLATE_HTML = r"""<!DOCTYPE html>
     return {s:'\u21CA', cl:'#C0392B'};
   }
   function lastIdx(a){ for(let i=a.length-1;i>=0;i--) if(a[i]!=null) return i; return -1; }
-  function valAgo(a,idx,b){ let j=idx-b; while(j>=0&&a[j]==null) j--; return j>=0?a[j]:a[idx]; }
+
+  // Calcula média dos valores não-nulos numa janela [i-janela+1 .. i]
+  function mediaJanela(a, i, janela){
+    let soma=0, n=0;
+    for(let j=Math.max(0,i-janela+1); j<=i; j++){
+      if(a[j]!=null){ soma+=a[j]; n++; }
+    }
+    return n>0 ? soma/n : null;
+  }
+
+  // Tendência: média das últimas 2 semanas vs média das 2 semanas anteriores
+  // Isso reduz o ruído de pontos isolados
+  function calcDelta(a, idxAtual, pontosPorSemana){
+    const meia = Math.max(1, Math.round(pontosPorSemana * 2));  // 2 semanas em pontos
+    const m_recente  = mediaJanela(a, idxAtual, meia);
+    const m_anterior = mediaJanela(a, Math.max(0, idxAtual - meia), meia);
+    if (m_recente == null || m_anterior == null) return 0;
+    return m_recente - m_anterior;
+  }
 
   const labels = DADOS.labels;
   const datasets = DADOS.series.map(s => ({
@@ -278,7 +297,10 @@ _TEMPLATE_HTML = r"""<!DOCTYPE html>
       const usadosSeta=[]; const usadosNome=[];
       DADOS.series.forEach(s=>{
         const i=lastIdx(s.dados); if(i<0) return;
-        const atual=s.dados[i]; const delta=atual-valAgo(s.dados,i,passoPontos4sem); const t=seta(delta);
+        const atual=s.dados[i];
+        const pontosPorSemana = Math.max(1, Math.round(7 / DADOS.passo_dias));
+        const delta=calcDelta(s.dados, i, pontosPorSemana);
+        const t=seta(delta);
         const yLinha=y.getPixelForValue(atual);
         let ySeta=yLinha-22; if(ySeta<top+8) ySeta=top+8;
         usadosSeta.forEach(u=>{ if(Math.abs(u-ySeta)<18) ySeta=u-18; }); usadosSeta.push(ySeta);
