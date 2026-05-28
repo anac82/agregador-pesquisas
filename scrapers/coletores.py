@@ -37,7 +37,7 @@ def coletar_do_csv_manual(arquivo_csv: str) -> list:
                 "contratante": row.get("contratante", "").strip() or None,
                 "data_inicio_campo": row["data_inicio_campo"],
                 "data_fim_campo": row["data_fim_campo"],
-                "amostra": int(row["amostra"]),
+               "amostra": int(float(row["amostra"])),
                 "margem_erro": float(row["margem_erro"]) if row.get("margem_erro") else None,
                 "intervalo_confianca": float(row["intervalo_confianca"]) if row.get("intervalo_confianca") else 95.0,
                 "turno": int(row.get("turno", 1)) if row.get("turno") else 1,
