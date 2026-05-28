@@ -70,7 +70,12 @@ def gerar_aba_cenario(wb, nome_cenario, agregacao, pesquisas_brutas, pesos_insti
 
     df = agregacao["detalhamento"]
     if not df.empty:
-        cols = ["instituto", "data_fim_campo", "amostra", "peso_final"] + candidatos
+        cols = [
+            "instituto", "data_fim_campo", "amostra",
+            "score", "metodologia_tse", "custo_reais",
+            "custo_por_entrevistado", "flag_instituto_conhecido",
+            "flag_nacional_explicito", "peso_final",
+        ] + candidatos
         df = df[cols].copy().sort_values("data_fim_campo", ascending=False)
 
         for j, col in enumerate(cols, start=1):
@@ -197,8 +202,11 @@ def gerar_aba_todas_pesquisas(wb, todas_pesquisas):
 
     cols_meta = [
         "cenario", "instituto", "contratante", "data_inicio_campo",
-        "data_fim_campo", "amostra", "margem_erro", "turno","score",
-        "metodologia", "votos_validos", "registro_tse", "url_fonte",
+        "data_fim_campo", "amostra", "score", "metodologia_tse",
+        "custo_reais", "custo_por_entrevistado",
+        "flag_instituto_conhecido", "flag_nacional_explicito",
+        "margem_erro", "turno", "metodologia",
+        "votos_validos", "registro_tse", "url_fonte",
     ]
     cols = cols_meta + candidatos
 
