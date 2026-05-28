@@ -5,16 +5,14 @@ Presidenciais no TSE: 311   |   Aprovadas: 85
 
 ✅ Nenhuma pesquisa nova no TSE hoje.
 
-⏳ APROVADAS SEM DADOS NO AGREGADOR (49):
+⏳ APROVADAS SEM DADOS NO AGREGADOR (48):
 ------------------------------------------------------------
   AGORASEI PESQUISA              BR-05671/2026        campo_fim: 2026-05-31  n=1.500  divulg: 2026-06-01
   Real Time Big Data             BR-05864/2026        campo_fim: 2026-05-30  n=2.000  divulg: 2026-06-01
   DATA RD                        BR-05325/2026        campo_fim: 2026-05-29  n=1.509  divulg: 2026-06-02
   Vox Brasil                     BR-09539/2026        campo_fim: 2026-05-29  n=2.100  divulg: 2026-05-31
   PoderData                      BR-04882/2026        campo_fim: 2026-05-28  n=2.400  divulg: 2026-05-29
-  Boas Ideias                    BR-02918/2026        campo_fim: 2026-05-27  n=1.500  divulg: 2026-05-28
   Média Inteligência             BR-07909/2026        campo_fim: 2026-05-27  n=2.000  divulg: 2026-05-29
-  Indexa                         BR-02154/2026        campo_fim: 2026-05-24  n=2.000  divulg: 2026-05-27
   Jota                           BR-02997/2026        campo_fim: 2026-05-23  n=6.000  divulg: 2026-05-27
   Item Pesquisas                 BR-04272/2026        campo_fim: 2026-05-22  n=1.250  divulg: 2026-05-29
   Inst. Pesquisa Múltipla        BR-00432/2026        campo_fim: 2026-05-20  n=1.070  divulg: 2026-05-24
@@ -37,6 +35,7 @@ Presidenciais no TSE: 311   |   Aprovadas: 85
   100 Cidades                    BR-05067/2026        campo_fim: 2026-03-27  n=1.200  divulg: 2026-04-01
   Affare Institute               BR-08713/2026        campo_fim: 2026-03-26  n=1.500  divulg: 2026-03-28
   Qualitta                       BR-05405/2026        campo_fim: 2026-03-25  n=1.200  divulg: 2026-03-27
+  AtlasIntel                     BR-06058/2026        campo_fim: 2026-03-23  n=4.200  divulg: 2026-03-31
   Delta Agência                  BR-07046/2026        campo_fim: 2026-03-21  n=1.006  divulg: 2026-03-22
   Instituto França               BR-01905/2026        campo_fim: 2026-03-18  n=1.224  divulg: 2026-03-18
   Instituto Phoenix              BR-04031/2026        campo_fim: 2026-03-12  n=1.055  divulg: 2026-03-12
@@ -48,8 +47,8 @@ Presidenciais no TSE: 311   |   Aprovadas: 85
   DataTrends                     BR-06780/2026        campo_fim: 2026-02-24  n=1.200  divulg: 2026-02-28
   Quaest                         BR-00249/2026        campo_fim: 2026-02-09  n=2.004  divulg: 2026-02-11
   Colectta                       BR-04291/2026        campo_fim: 2026-02-09  n=2.004  divulg: 2026-02-11
-  100 Cidades                    BR-02276/2026        campo_fim: 2026-02-07  n=2.000  divulg: 2026-02-10
   Inst. Pesquisa Múltipla        BR-03057/2026        campo_fim: 2026-02-07  n=1.200  divulg: 2026-02-12
+  100 Cidades                    BR-02276/2026        campo_fim: 2026-02-07  n=2.000  divulg: 2026-02-10
   Boas Ideias                    BR-08425/2026        campo_fim: 2026-02-02  n=1.500  divulg: 2026-02-04
   Jota                           BR-03796/2026        campo_fim: 2026-01-31  n=5.000  divulg: 2026-02-01
   Anova                          BR-04054/2026        campo_fim: 2026-01-26  n=2.000  divulg: 2026-01-28
@@ -57,4 +56,4 @@ Presidenciais no TSE: 311   |   Aprovadas: 85
   Data Povo                      BR-09123/2026        campo_fim: 2026-01-21  n=1.300  divulg: 2026-02-03
   100 Cidades                    BR-08233/2026        campo_fim: 2026-01-19  n=2.000  divulg: 2026-01-22
 
-Gerado: 28/05/2026 16:51
+Gerado: 28/05/2026 19:49
