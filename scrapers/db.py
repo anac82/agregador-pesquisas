@@ -41,12 +41,10 @@ def classificar_cenario(pesquisa: dict, cenarios_config: list) -> Optional[str]:
 
     Turno 1:
         - Só aceita tipo exatamente igual a "estimulado"
-        - Tipos alternativos (estimulado 2, sem Flávio, com Tarcísio, etc.)
-          são registrados no banco mas NÃO entram no agregador do 1º turno
 
     Turno 2:
-        - Classifica pelo par de candidatos (filtro_candidatos no config)
-        - Aceita exatamente 2 candidatos reais (sem Branco/Nulo/Não sabe)
+        - Primeiro tenta bater o campo `tipo` diretamente com o nome do cenário
+        - Se não bater, usa o filtro por candidatos como fallback
     """
     turno = int(pesquisa.get("turno", 1))
     tipo  = str(pesquisa.get("tipo", "")).strip().lower()
@@ -57,7 +55,6 @@ def classificar_cenario(pesquisa: dict, cenarios_config: list) -> Optional[str]:
     ]
 
     if turno == 1:
-        # Só o cenário principal (tipo == "estimulado") entra no 1º Turno
         if tipo != "estimulado":
             return None
         for cen in cenarios_config:
@@ -65,7 +62,15 @@ def classificar_cenario(pesquisa: dict, cenarios_config: list) -> Optional[str]:
                 return cen["nome"]
         return None
 
-    # Turno 2: classificar pelo par de candidatos
+    # Turno 2: primeiro tenta bater pelo nome do tipo com o nome do cenário
+    for cen in cenarios_config:
+        if cen["turno"] != 2:
+            continue
+        nome_cen = cen["nome"].strip().lower()
+        if tipo == nome_cen:
+            return cen["nome"]
+
+    # Fallback: inferir pelos candidatos com valor > 0
     for cen in cenarios_config:
         if cen["turno"] != 2:
             continue
