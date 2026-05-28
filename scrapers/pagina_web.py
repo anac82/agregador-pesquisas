@@ -75,25 +75,41 @@ def _preparar_dados_grafico(serie, top_n=5):
         })
 
     # Montar pontos brutos das pesquisas individuais
-    # Formato: [{x: "dd/mês", y: valor, cand: "Lula", inst: "Datafolha", data_iso: "2026-05-14"}]
     pesquisas_raw = []
     passo = serie.get("passo_dias", 7)
     data_inicio = _to_date(pontos[0]["data"])
+    vistas = set()  # evitar duplicatas (mesma pesquisa aparece em múltiplas janelas)
 
     for pt in pontos:
         data_pt = _to_date(pt["data"])
         idx = round((data_pt - data_inicio).days / passo)
         for pesq in pt.get("pesquisas", []):
+            # Chave única por pesquisa+candidato
+            reg  = pesq.get("registro_tse") or pesq.get("hash_unico", "")
+            inst = pesq.get("instituto", "")
+            data_pesq = str(pesq.get("data_fim_campo", ""))[:10]
+
             for cand in candidatos:
-                val = pesq.get("resultados", {}).get(cand)
-                if val is not None and val > 0:
-                    pesquisas_raw.append({
-                        "idx":  idx,
-                        "cand": cand,
-                        "val":  round(float(val), 1),
-                        "inst": pesq.get("instituto", ""),
-                        "data": str(_to_date(pesq.get("data_fim_campo", pt["data"])))[:10],
-                    })
+                chave = (reg, cand)
+                if chave in vistas:
+                    continue
+                # Candidatos podem estar em "resultados" (banco) ou diretamente (CSV)
+                resultados = pesq.get("resultados", {})
+                val = resultados.get(cand) if resultados else pesq.get(cand)
+                try:
+                    val = float(val)
+                except (TypeError, ValueError):
+                    continue
+                if val <= 0:
+                    continue
+                vistas.add(chave)
+                pesquisas_raw.append({
+                    "idx":  idx,
+                    "cand": cand,
+                    "val":  round(val, 1),
+                    "inst": inst,
+                    "data": data_pesq,
+                })
 
     return {
         "labels":        labels,
