@@ -150,6 +150,63 @@ def main():
     print("\n" + "=" * 60)
     print(f"\nExcel gerado: {caminho}")
 
+    # Calcular slopes sobre a série agregada (já ponderada)
+    def calcular_slopes(series_por_cenario: dict) -> dict:
+        """
+        Calcula slope (pp/semana) por candidato usando os pontos
+        da série temporal agregada já ponderada — últimos 60 dias.
+        """
+        import math
+        serie = series_por_cenario.get("1º Turno", {})
+        pontos = serie.get("pontos", [])
+        if not pontos:
+            return {}
+
+        HOJE = date.today()
+        result = {}
+
+        # Coletar candidatos disponíveis
+        candidatos = set()
+        for p in pontos:
+            candidatos.update(p.get("medias", {}).keys())
+
+        for cand in candidatos:
+            pts = []
+            for p in pontos:
+                data = p.get("data")
+                val  = p.get("medias", {}).get(cand)
+                if data and val is not None:
+                    try:
+                        d = date.fromisoformat(str(data)[:10])
+                        dias = (HOJE - d).days
+                        if dias <= 60:
+                            pts.append((dias, val))
+                    except Exception:
+                        pass
+
+            if len(pts) < 3:
+                continue
+
+            # Regressão ponderada: mais recente = mais peso
+            w  = [math.exp(-0.05 * p[0]) for p in pts]
+            x  = [-p[0] for p in pts]
+            y  = [p[1] for p in pts]
+            sw   = sum(w)
+            swx  = sum(wi*xi for wi,xi in zip(w,x))
+            swy  = sum(wi*yi for wi,yi in zip(w,y))
+            swxx = sum(wi*xi*xi for wi,xi in zip(w,x))
+            swxy = sum(wi*xi*yi for wi,xi,yi in zip(w,x,y))
+            denom = sw*swxx - swx*swx
+            if abs(denom) < 1e-10:
+                continue
+            slope = (sw*swxy - swx*swy) / denom * 7  # pp/semana
+            result[cand] = round(slope, 3)
+
+        return result
+
+    slopes = calcular_slopes(series_por_cenario)
+    print(f"   Slopes (pp/sem): {slopes}")
+
     # Gerar página web (GitHub Pages) se houver séries temporais
     if series_por_cenario:
         print("\n[+] Gerando página web (docs/index.html)...")
@@ -161,6 +218,7 @@ def main():
             data_geracao=date.today(),
             cenario_principal="1º Turno",
             ultimas_pesquisas=ultimas,
+            slopes=slopes,
         )
         print(f"    Página gerada: {caminho_html}")
 if __name__ == "__main__":
