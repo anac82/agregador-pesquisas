@@ -1,15 +1,26 @@
 ============================================================
-MONITOR TSE — 2026-05-28
-Presidenciais no TSE: 311   |   Aprovadas: 85
+MONITOR TSE — 2026-05-29
+Presidenciais no TSE: 314   |   Aprovadas: 86
 ============================================================
 
-✅ Nenhuma pesquisa nova no TSE hoje.
+🆕 NOVAS NO TSE (1):
+------------------------------------------------------------
+INSTITUTO:   Exatus
+PROTOCOLO:   BR-01659/2026
+CAMPO:       2026-05-26 até 2026-05-29
+DIVULGAÇÃO:  2026-06-03
+AMOSTRA:     1.500 entrevistados
+CUSTO:       R$ 30.000 (R$ 20.00/entrev.)
+METODOLOGIA: presencial
+MANUAIS:     ❌ falta no manuais
+------------------------------------------------------------
 
-⏳ APROVADAS SEM DADOS NO AGREGADOR (48):
+⏳ APROVADAS SEM DADOS NO AGREGADOR (49):
 ------------------------------------------------------------
   AGORASEI PESQUISA              BR-05671/2026        campo_fim: 2026-05-31  n=1.500  divulg: 2026-06-01
   Real Time Big Data             BR-05864/2026        campo_fim: 2026-05-30  n=2.000  divulg: 2026-06-01
   DATA RD                        BR-05325/2026        campo_fim: 2026-05-29  n=1.509  divulg: 2026-06-02
+  Exatus                         BR-01659/2026        campo_fim: 2026-05-29  n=1.500  divulg: 2026-06-03
   Vox Brasil                     BR-09539/2026        campo_fim: 2026-05-29  n=2.100  divulg: 2026-05-31
   PoderData                      BR-04882/2026        campo_fim: 2026-05-28  n=2.400  divulg: 2026-05-29
   Média Inteligência             BR-07909/2026        campo_fim: 2026-05-27  n=2.000  divulg: 2026-05-29
@@ -40,15 +51,15 @@ Presidenciais no TSE: 311   |   Aprovadas: 85
   Instituto França               BR-01905/2026        campo_fim: 2026-03-18  n=1.224  divulg: 2026-03-18
   Instituto Phoenix              BR-04031/2026        campo_fim: 2026-03-12  n=1.055  divulg: 2026-03-12
   Boas Ideias                    BR-00386/2026        campo_fim: 2026-03-10  n=1.500  divulg: 2026-03-11
-  Ranking Brasil                 BR-05359/2026        campo_fim: 2026-03-06  n=2.000  divulg: 2026-03-06
   100 Cidades                    BR-06607/2026        campo_fim: 2026-03-06  n=2.000  divulg: 2026-03-11
+  Ranking Brasil                 BR-05359/2026        campo_fim: 2026-03-06  n=2.000  divulg: 2026-03-06
   Vetor                          BR-03742/2026        campo_fim: 2026-03-03  n=9.000  divulg: 2026-03-05
   Instituto Phoenix              BR-02921/2026        campo_fim: 2026-02-28  n=1.200  divulg: 2026-03-03
   DataTrends                     BR-06780/2026        campo_fim: 2026-02-24  n=1.200  divulg: 2026-02-28
-  Quaest                         BR-00249/2026        campo_fim: 2026-02-09  n=2.004  divulg: 2026-02-11
   Colectta                       BR-04291/2026        campo_fim: 2026-02-09  n=2.004  divulg: 2026-02-11
-  Inst. Pesquisa Múltipla        BR-03057/2026        campo_fim: 2026-02-07  n=1.200  divulg: 2026-02-12
+  Quaest                         BR-00249/2026        campo_fim: 2026-02-09  n=2.004  divulg: 2026-02-11
   100 Cidades                    BR-02276/2026        campo_fim: 2026-02-07  n=2.000  divulg: 2026-02-10
+  Inst. Pesquisa Múltipla        BR-03057/2026        campo_fim: 2026-02-07  n=1.200  divulg: 2026-02-12
   Boas Ideias                    BR-08425/2026        campo_fim: 2026-02-02  n=1.500  divulg: 2026-02-04
   Jota                           BR-03796/2026        campo_fim: 2026-01-31  n=5.000  divulg: 2026-02-01
   Anova                          BR-04054/2026        campo_fim: 2026-01-26  n=2.000  divulg: 2026-01-28
@@ -56,4 +67,4 @@ Presidenciais no TSE: 311   |   Aprovadas: 85
   Data Povo                      BR-09123/2026        campo_fim: 2026-01-21  n=1.300  divulg: 2026-02-03
   100 Cidades                    BR-08233/2026        campo_fim: 2026-01-19  n=2.000  divulg: 2026-01-22
 
-Gerado: 28/05/2026 22:16
+Gerado: 29/05/2026 12:28
