@@ -5,185 +5,188 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Agregador de Pesquisas — Presidente 2026</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: #ffffff;
-    color: #1a1a1a;
-    line-height: 1.5;
-    padding: 24px;
-  }
-  .container { max-width: 860px; margin: 0 auto; }
-  h1 { font-size: 24px; font-weight: 600; margin-bottom: 4px; }
-  .subtitulo { font-size: 14px; color: #666; margin-bottom: 4px; }
-  .atualizado { font-size: 12px; color: #999; margin-bottom: 28px; }
-  .grafico-wrap { position: relative; width: 100%; height: 440px; margin-bottom: 16px; }
-  .legenda-tend {
-    font-size: 11px; color: #999; line-height: 1.7; margin-top: 8px;
-    border-top: 1px solid #eee; padding-top: 12px;
-  }
-  .rodape {
-    margin-top: 32px; padding-top: 16px; border-top: 1px solid #eee;
-    font-size: 12px; color: #999;
-  }
-  .sem-dados { color: #999; font-style: italic; padding: 40px 0; text-align: center; }
+  body { font-family: Arial, sans-serif; margin: 0; padding: 16px; background: #f9f9f9; color: #333; }
+  h1 { font-size: 1.3rem; margin-bottom: 4px; }
+  .sub { color: #666; font-size: 0.85rem; margin-bottom: 16px; }
+  .grafico-wrap { position: relative; width: 100%; height: 440px; margin-bottom: 16px; background: #fff; border-radius: 8px; padding: 8px; box-sizing: border-box; }
+  .sem-dados { display: flex; align-items: center; justify-content: center; height: 100%; color: #999; font-size: 1rem; }
+  .legenda-tend { font-size: 0.78rem; color: #555; margin-bottom: 12px; }
+  .rodape { font-size: 0.75rem; color: #888; border-top: 1px solid #ddd; padding-top: 10px; margin-top: 16px; }
+  .ultimas { font-size: 0.78rem; margin-bottom: 12px; }
+  .ultimas ul { margin: 4px 0; padding-left: 20px; }
+  .ultimas li { margin-bottom: 2px; }
+  details summary { cursor: pointer; font-weight: bold; font-size: 0.82rem; color: #555; }
+  code { background: #eee; padding: 1px 4px; border-radius: 3px; font-size: 0.75rem; }
 </style>
 </head>
 <body>
-<div class="container">
-  <h1>Intenção de voto — 1º Turno</h1>
-  <div class="subtitulo">Média móvel ponderada · Eleições presidenciais 2026</div>
-  <div class="atualizado">Atualizado em 29 de maio de 2026</div>
-
-  <div class="grafico-wrap">
-    <canvas id="grafico" role="img" aria-label="Gráfico de evolução da intenção de voto ao longo do tempo."></canvas>
-  </div>
-
-  <div class="legenda-tend" id="legenda-tend"></div>
-
-  <div class="rodape">
-    <p>Fonte: agregação própria de pesquisas registradas no TSE (Quaest, Datafolha, AtlasIntel, Futura, Meio/Ideia).
-    A seta indica a tendência nas últimas 4 semanas. Este é um agregador independente, sem fins comerciais.</p>
-    
-    <details style="margin-top: 12px;">
-      <summary style="cursor: pointer; color: #666; font-weight: 500;">
-        Últimas pesquisas consideradas →
-      </summary>
-      <ul style='font-size:11px; color:#999; margin-top:4px; margin-bottom:0;'><li><strong>Meio/Ideia</strong> (23 de mai, n=1500.0) <code>BR-02918/2026</code></li><li><strong>Nexus/FSB</strong> (22 de mai, n=2045.0) <code>BR-04193/2026</code></li><li><strong>Indexa</strong> (22 de mai, n=2000.0) <code>BR-02154/2026</code></li><li><strong>Datafolha</strong> (20 de mai, n=2004.0) <code>BR-07489/2026</code></li><li><strong>Gerp</strong> (19 de mai, n=2000.0) <code>BR-07971/2026</code></li><li><strong>Vox Brasil</strong> (17 de mai, n=2100.0) <code>BR-02416/2026</code></li><li><strong>AtlasIntel</strong> (13 de mai, n=5032.0) <code>BR-06939/2026</code></li><li><strong>Datafolha</strong> (12 de mai, n=2004.0) <code>BR-00290/2026</code></li><li><strong>Gerp</strong> (8 de mai, n=2000.0) <code>BR-03369/2026</code></li><li><strong>Quaest</strong> (8 de mai, n=2004.0) <code>BR-03598/2026</code></li></ul>
-    </details>
-  </div>
+<h1>Intenção de voto — 1º Turno</h1>
+<div class="sub">Média ponderada por recência, amostra e metodologia · Eleições presidenciais 2026 · Atualizado em 29 de maio de 2026</div>
+<div class="grafico-wrap">
+  <canvas id="grafico" role="img" aria-label="Gráfico de evolução da intenção de voto."></canvas>
+</div>
+<div class="legenda-tend" id="legenda-tend"></div>
+<div class="ultimas">
+  <details>
+    <summary>Últimas pesquisas consideradas →</summary>
+    <ul><li><b>Meio/Ideia</b> (23 de mai, n=1.500) <code>BR-02918/2026</code></li>
+<li><b>Nexus/FSB</b> (22 de mai, n=2.045) <code>BR-04193/2026</code></li>
+<li><b>Indexa</b> (22 de mai, n=2.000) <code>BR-02154/2026</code></li>
+<li><b>Datafolha</b> (20 de mai, n=2.004) <code>BR-07489/2026</code></li>
+<li><b>Gerp</b> (19 de mai, n=2.000) <code>BR-07971/2026</code></li>
+<li><b>Vox Brasil</b> (17 de mai, n=2.100) <code>BR-02416/2026</code></li>
+<li><b>AtlasIntel</b> (13 de mai, n=5.032) <code>BR-06939/2026</code></li>
+<li><b>Datafolha</b> (12 de mai, n=2.004) <code>BR-00290/2026</code></li>
+<li><b>Gerp</b> (8 de mai, n=2.000) <code>BR-03369/2026</code></li>
+<li><b>Quaest</b> (8 de mai, n=2.004) <code>BR-03598/2026</code></li></ul>
+  </details>
+</div>
+<div class="rodape">
+  Fonte: agregação própria de pesquisas registradas no TSE. A seta indica a tendência por regressão linear ponderada nos últimos 60 dias. Agregador independente, sem fins comerciais.
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 (function(){
-  const DADOS = {"labels": ["11/jan", "18/jan", "25/jan", "01/fev", "08/fev", "15/fev", "22/fev", "01/mar", "08/mar", "15/mar", "22/mar", "29/mar", "05/abr", "12/abr", "19/abr", "26/abr", "03/mai", "10/mai", "17/mai", "24/mai"], "series": [{"label": "Lula", "cor": "#C0392B", "dados": [39.0, 39.2, 43.2, 42.3, 41.2, 40.6, 38.7, 40.8, 40.1, 39.9, 40.2, 41.0, 41.7, 40.5, 39.7, 38.8, 40.8, 41.1, 39.9, 40.8], "largura": 3.5}, {"label": "Flávio", "cor": "#2471A3", "dados": [32.0, 30.9, 32.9, 33.0, 32.4, 32.9, 32.4, 34.3, 33.6, 33.5, 33.6, 35.2, 36.2, 35.9, 35.0, 34.2, 35.6, 35.6, 35.5, 34.2], "largura": 3.5}, {"label": "Zema", "cor": "#CA8A04", "dados": [5.0, 5.1, 3.9, 3.6, 3.6, 2.9, 2.9, 3.2, 3.5, 3.2, 3.2, 3.2, 2.6, 3.2, 3.2, 3.2, 3.3, 3.2, 3.5, 3.7], "largura": 2}, {"label": "Caiado", "cor": "#7D8A2E", "dados": [null, 5.5, 4.5, 4.2, 4.2, 4.5, 4.6, 4.5, 4.3, 4.2, 4.1, 3.9, 3.7, 4.4, 4.7, 5.0, 4.7, 4.9, 3.7, 3.6], "largura": 2}, {"label": "Renan", "cor": "#7E57C2", "dados": [2.0, 1.7, 2.4, 2.2, 2.2, 2.2, 1.8, 2.1, 2.4, 2.1, 2.1, 2.8, 2.3, 2.3, 2.3, 2.0, 3.0, 3.1, 2.6, 3.3], "largura": 2}], "passo_dias": 7, "janela_dias": 30, "slopes": {"Aldo": -0.046, "Lula": 0.072, "Branco/Nulo": -0.288, "Daciolo": 0.044, "Hertz": 0.066, "Caiado": -0.193, "Samara": 0.245, "Renan": 0.16, "Zema": 0.117, "Rui": 0.203, "Cury": 0.025, "Não sabe": -0.195, "Flávio": -0.185}};
-  const wrap = document.querySelector('.grafico-wrap');
-  const legendaEl = document.getElementById('legenda-tend');
+  var DADOS = {"labels": ["11/jan", "18/jan", "25/jan", "01/fev", "08/fev", "15/fev", "22/fev", "01/mar", "08/mar", "15/mar", "22/mar", "29/mar", "05/abr", "12/abr", "19/abr", "26/abr", "03/mai", "10/mai", "17/mai", "24/mai"], "series": [{"label": "Lula", "cor": "#C0392B", "dados": [39.0, 39.2, 43.2, 42.3, 41.2, 40.6, 38.7, 40.8, 40.1, 39.9, 40.2, 41.0, 41.7, 40.5, 39.7, 38.8, 40.8, 41.1, 39.9, 40.8], "largura": 3.5}, {"label": "Flávio", "cor": "#2471A3", "dados": [32.0, 30.9, 32.9, 33.0, 32.4, 32.9, 32.4, 34.3, 33.6, 33.5, 33.6, 35.2, 36.2, 35.9, 35.0, 34.2, 35.6, 35.6, 35.5, 34.2], "largura": 3.5}, {"label": "Zema", "cor": "#CA8A04", "dados": [5.0, 5.1, 3.9, 3.6, 3.6, 2.9, 2.9, 3.2, 3.5, 3.2, 3.2, 3.2, 2.6, 3.2, 3.2, 3.2, 3.3, 3.2, 3.5, 3.7], "largura": 2}, {"label": "Caiado", "cor": "#7D8A2E", "dados": [null, 5.5, 4.5, 4.2, 4.2, 4.5, 4.6, 4.5, 4.3, 4.2, 4.1, 3.9, 3.7, 4.4, 4.7, 5.0, 4.7, 4.9, 3.7, 3.6], "largura": 2}, {"label": "Renan", "cor": "#7E57C2", "dados": [2.0, 1.7, 2.4, 2.2, 2.2, 2.2, 1.8, 2.1, 2.4, 2.1, 2.1, 2.8, 2.3, 2.3, 2.3, 2.0, 3.0, 3.1, 2.6, 3.3], "largura": 2}], "passo_dias": 7, "janela_dias": 30, "slopes": {"Lula": 0.072, "Rui": 0.203, "Caiado": -0.193, "Daciolo": 0.044, "Branco/Nulo": -0.288, "Samara": 0.245, "Hertz": 0.066, "Cury": 0.025, "Flávio": -0.185, "Zema": 0.117, "Aldo": -0.046, "Não sabe": -0.195, "Renan": 0.16}};
+  var wrap = document.querySelector('.grafico-wrap');
+  var legendaEl = document.getElementById('legenda-tend');
 
   if (!DADOS) {
-    wrap.innerHTML = '<div class="sem-dados">Ainda não há dados suficientes para gerar o gráfico.</div>';
+    wrap.innerHTML = '<div class="sem-dados">Ainda não há dados suficientes.</div>';
     return;
   }
 
-  function seta(slopePerWeek){
-    // slope em pp/semana
-    if (slopePerWeek >  1.0) return {s:'\u21C8', cl:'#1D9E75'};
-    if (slopePerWeek >  0.3) return {s:'\u2191', cl:'#1D9E75'};
-    if (slopePerWeek >= -0.3)return {s:'\u2192', cl:'#888780'};
-    if (slopePerWeek >= -1.0)return {s:'\u2193', cl:'#D85A30'};
-    return {s:'\u21CA', cl:'#C0392B'};
+  function seta(s){
+    if (s > 1.0)  return {t:'\u21C8', cor:'#1D9E75'};
+    if (s > 0.3)  return {t:'\u2191', cor:'#1D9E75'};
+    if (s >= -0.3)return {t:'\u2192', cor:'#888780'};
+    if (s >= -1.0)return {t:'\u2193', cor:'#D85A30'};
+    return {t:'\u21CA', cor:'#C0392B'};
   }
-  function lastIdx(a){ for(let i=a.length-1;i>=0;i--) if(a[i]!=null) return i; return -1; }
 
-  // Regressão linear ponderada — calcula inclinação em pp/semana
-  // Usa os últimos maxPontos pontos não-nulos, com peso decrescente por recência
-  function slopeRegPonderada(dados, labels, idxAtual, maxPontos){
-    const pts = [];
-    for(let i=idxAtual; i>=0 && pts.length<maxPontos; i--){
-      if(dados[i]==null) continue;
-      pts.push({x: i, y: dados[i]});
+  function lastIdx(a){
+    for(var i=a.length-1;i>=0;i--) if(a[i]!=null) return i;
+    return -1;
+  }
+
+  function slopeReg(dados, idxAtual, maxPts){
+    var pts = [];
+    for(var i=idxAtual; i>=0 && pts.length<maxPts; i--){
+      if(dados[i]!=null) pts.push({x:i, y:dados[i]});
     }
-    if(pts.length < 3) return 0;  // pontos demais faltando
-
-    // Peso = decaimento exponencial por posição (mais recente = mais peso)
-    const n = pts.length;
-    let sw=0, swx=0, swy=0, swxx=0, swxy=0;
-    pts.forEach((p, idx) => {
-      const w = Math.exp(-0.05 * idx);  // mais recente = idx 0 = peso 1
-      sw   += w;
-      swx  += w * p.x;
-      swy  += w * p.y;
-      swxx += w * p.x * p.x;
-      swxy += w * p.x * p.y;
+    if(pts.length < 3) return 0;
+    var sw=0,swx=0,swy=0,swxx=0,swxy=0;
+    pts.forEach(function(p,idx){
+      var w = Math.exp(-0.05*idx);
+      sw+=w; swx+=w*p.x; swy+=w*p.y; swxx+=w*p.x*p.x; swxy+=w*p.x*p.y;
     });
-    const denom = sw*swxx - swx*swx;
-    if(Math.abs(denom) < 1e-10) return 0;
-    const slope = (sw*swxy - swx*swy) / denom;
-    // Converter de pp/ponto para pp/semana
-    return slope * (7 / DADOS.passo_dias);
+    var den = sw*swxx - swx*swx;
+    if(Math.abs(den)<1e-10) return 0;
+    return (sw*swxy - swx*swy)/den * (7/DADOS.passo_dias);
   }
 
-  const datasets = DADOS.series.map(s => ({
-    label: s.label, data: s.dados,
-    borderColor: s.cor, backgroundColor: s.cor,
-    borderWidth: s.largura, tension: 0.4,
-    pointRadius: 0, pointHoverRadius: 4, spanGaps: true, fill: false
-  }));
+  var labels = DADOS.labels;
+  var datasets = DADOS.series.map(function(s){
+    return {
+      label: s.label,
+      data: s.dados,
+      borderColor: s.cor,
+      backgroundColor: s.cor+'22',
+      borderWidth: s.largura,
+      pointRadius: 0,
+      tension: 0.35,
+      spanGaps: true
+    };
+  });
 
-  // passo entre pontos = passo_dias; 4 semanas = 28 dias => back em nº de pontos
-  const passoPontos4sem = Math.max(1, Math.round(28 / DADOS.passo_dias));
-  const idxIni4 = labels.length - 1 - passoPontos4sem;
-
-  const faixa = {
+  var faixa = {
     id:'faixa',
-    beforeDatasetsDraw(chart){
-      const {ctx, chartArea:{top,bottom}, scales:{x}} = chart;
-      const x0=x.getPixelForValue(Math.max(0,idxIni4)), x1=x.getPixelForValue(labels.length-1);
+    beforeDraw: function(chart){
+      var ctx=chart.ctx, x=chart.scales.x, y=chart.scales.y;
+      var n=DADOS.labels.length, pts4=Math.max(1,Math.round(28/DADOS.passo_dias));
+      var x0=x.getPixelForValue(Math.max(0,n-pts4)), x1=x.getPixelForValue(n-1);
+      var top=chart.chartArea.top, bot=chart.chartArea.bottom;
       ctx.save();
-      ctx.fillStyle='rgba(136,135,128,0.10)'; ctx.fillRect(x0,top,x1-x0,bottom-top);
-      ctx.strokeStyle='rgba(136,135,128,0.25)'; ctx.setLineDash([3,3]);
-      ctx.beginPath(); ctx.moveTo(x0,top); ctx.lineTo(x0,bottom); ctx.stroke(); ctx.setLineDash([]);
-      ctx.font='500 10px sans-serif'; ctx.fillStyle='#888780'; ctx.textAlign='center';
-      ctx.fillText('últimas 4 semanas',(x0+x1)/2, top+12); ctx.restore();
+      ctx.fillStyle='rgba(200,200,200,0.15)';
+      ctx.fillRect(x0,top,x1-x0,bot-top);
+      ctx.fillStyle='#bbb'; ctx.font='11px Arial'; ctx.textAlign='center';
+      ctx.fillText('últimas 4 semanas',(x0+x1)/2,top+12);
+      ctx.restore();
     }
   };
-  const setasFlutuantes = {
+
+  var setasFlutuantes = {
     id:'setasFlutuantes',
-    afterDatasetsDraw(chart){
-      const {ctx, chartArea:{top}, scales:{x,y}} = chart;
-      const xUlt=x.getPixelForValue(labels.length-1);
+    afterDatasetsDraw: function(chart){
+      var ctx=chart.ctx, x=chart.scales.x, y=chart.scales.y;
+      var xUlt=x.getPixelForValue(DADOS.labels.length-1);
+      var usados=[];
       ctx.save(); ctx.textBaseline='middle';
-      const usadosSeta=[]; const usadosNome=[];
-      DADOS.series.forEach(s=>{
-        const i=lastIdx(s.dados); if(i<0) return;
-        const atual=s.dados[i];
-        let slope;
-        if (DADOS.slopes && DADOS.slopes[s.label] !== undefined) {
-          slope = DADOS.slopes[s.label];  // pré-calculado no Python
+      DADOS.series.forEach(function(s){
+        var i=lastIdx(s.dados); if(i<0) return;
+        var slope;
+        if(DADOS.slopes && DADOS.slopes[s.label]!==undefined){
+          slope=DADOS.slopes[s.label];
         } else {
-          const maxPontos = Math.max(6, Math.round(60 / DADOS.passo_dias));
-          slope = slopeRegPonderada(s.dados, labels, i, maxPontos);
+          slope=slopeReg(s.dados,i,Math.max(6,Math.round(60/DADOS.passo_dias)));
         }
-        const t=seta(slope);
-        const yLinha=y.getPixelForValue(atual);
-        let ySeta=yLinha-22; if(ySeta<top+8) ySeta=top+8;
-        usadosSeta.forEach(u=>{ if(Math.abs(u-ySeta)<18) ySeta=u-18; }); usadosSeta.push(ySeta);
-        ctx.beginPath(); ctx.arc(xUlt,yLinha,3,0,Math.PI*2); ctx.fillStyle=s.cor; ctx.fill();
-        ctx.font='500 18px sans-serif'; ctx.fillStyle=t.cl; ctx.textAlign='center';
-        ctx.fillText(t.s, xUlt, ySeta);
-        let yNome=yLinha;
-        usadosNome.forEach(u=>{ if(Math.abs(u-yNome)<17) yNome=u+17; }); usadosNome.push(yNome);
-        ctx.textAlign='left'; ctx.font='500 13px sans-serif'; ctx.fillStyle=s.cor;
-        ctx.fillText(s.label+'  '+atual.toFixed(1)+'%', xUlt+12, yNome);
+        var t=seta(slope);
+        var yLinha=y.getPixelForValue(s.dados[i]);
+        var yS=yLinha-22;
+        if(yS<chart.chartArea.top+8) yS=chart.chartArea.top+8;
+        usados.forEach(function(u){ if(Math.abs(u-yS)<18) yS=u-18; });
+        usados.push(yS);
+        ctx.beginPath(); ctx.arc(xUlt,yLinha,3,0,Math.PI*2);
+        ctx.fillStyle=s.cor; ctx.fill();
+        ctx.font='500 18px sans-serif'; ctx.fillStyle=t.cor; ctx.textAlign='center';
+        ctx.fillText(t.t, xUlt+18, yS);
+        ctx.font='bold 12px Arial'; ctx.fillStyle=s.cor;
+        ctx.fillText(s.dados[i].toFixed(1)+'%', xUlt+42, yS);
       });
       ctx.restore();
     }
   };
 
   new Chart(document.getElementById('grafico'),{
-    type:'line', data:{labels,datasets}, plugins:[faixa,setasFlutuantes],
-    options:{ responsive:true, maintainAspectRatio:false,
-      layout:{padding:{right:120,top:8}},
+    type:'line',
+    data:{labels:labels, datasets:datasets},
+    plugins:[faixa, setasFlutuantes],
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      layout:{padding:{right:80,top:8}},
       interaction:{mode:'index',intersect:false},
       scales:{
-        y:{min:0,max:52,ticks:{stepSize:10,callback:v=>v+'%',font:{size:12},color:'#888780'},
-           grid:{color:'rgba(136,135,128,0.15)',drawTicks:false},border:{display:false}},
-        x:{ticks:{font:{size:11},color:'#888780',maxRotation:0,autoSkip:true,maxTicksLimit:8},
-           grid:{display:false},border:{color:'rgba(136,135,128,0.3)'}}
+        x:{grid:{display:false}, ticks:{maxRotation:45,font:{size:10}}},
+        y:{min:20, max:60, ticks:{callback:function(v){return v+'%';}}}
       },
-      plugins:{legend:{display:false},
-        tooltip:{backgroundColor:'#2C2C2A',padding:10,cornerRadius:8,
-          callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y==null?'\u2014':c.parsed.y.toFixed(1)+'%')}}}
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            label:function(c){
+              return c.dataset.label+': '+(c.parsed.y==null?'—':c.parsed.y.toFixed(1)+'%');
+            }
+          }
+        }
+      }
     }
   });
 
-  legendaEl.innerHTML = 'A seta indica a <b style="font-weight:500;color:#666">tendência por regressão linear ponderada</b> nos últimos 60 dias: ' +
-    '<span style="color:#1D9E75">&#8648; forte alta</span> · ' +
-    '<span style="color:#1D9E75">&#8593; alta</span> · ' +
-    '<span style="color:#888780">&#8594; estável</span> · ' +
-    '<span style="color:#D85A30">&#8595; queda</span> · ' +
-    '<span style="color:#C0392B">&#8650; forte queda</span>';
+  if(legendaEl){
+    var parts = DADOS.series.map(function(s){
+      var i=lastIdx(s.dados); if(i<0) return '';
+      var slope = (DADOS.slopes && DADOS.slopes[s.label]!==undefined)
+        ? DADOS.slopes[s.label]
+        : slopeReg(s.dados,i,Math.max(6,Math.round(60/DADOS.passo_dias)));
+      var t=seta(slope);
+      return '<span style="color:'+s.cor+';font-weight:600">'+s.label+'</span> '+
+             '<span style="color:'+t.cor+'">'+t.t+'</span>';
+    }).filter(Boolean);
+    legendaEl.innerHTML = parts.join(' &nbsp;·&nbsp; ') +
+      ' &nbsp;<span style="color:#aaa;font-size:0.95em">(tendência 60 dias)</span>';
+  }
 })();
 </script>
 </body>
