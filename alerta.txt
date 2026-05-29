@@ -3,17 +3,7 @@ MONITOR TSE — 2026-05-29
 Presidenciais no TSE: 314   |   Aprovadas: 86
 ============================================================
 
-🆕 NOVAS NO TSE (1):
-------------------------------------------------------------
-INSTITUTO:   Exatus
-PROTOCOLO:   BR-01659/2026
-CAMPO:       2026-05-26 até 2026-05-29
-DIVULGAÇÃO:  2026-06-03
-AMOSTRA:     1.500 entrevistados
-CUSTO:       R$ 30.000 (R$ 20.00/entrev.)
-METODOLOGIA: presencial
-MANUAIS:     ❌ falta no manuais
-------------------------------------------------------------
+✅ Nenhuma pesquisa nova no TSE hoje.
 
 ⏳ APROVADAS SEM DADOS NO AGREGADOR (49):
 ------------------------------------------------------------
@@ -67,4 +57,4 @@ MANUAIS:     ❌ falta no manuais
   Data Povo                      BR-09123/2026        campo_fim: 2026-01-21  n=1.300  divulg: 2026-02-03
   100 Cidades                    BR-08233/2026        campo_fim: 2026-01-19  n=2.000  divulg: 2026-01-22
 
-Gerado: 29/05/2026 12:28
+Gerado: 29/05/2026 12:43
