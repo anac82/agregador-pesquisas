@@ -1,66 +1,73 @@
-"""Gera uma página HTML (estilo BBC/FT) com o gráfico de evolução das pesquisas.
+"""pagina_web.py — Gera o index.html para GitHub Pages."""
 
-A página é estática (HTML + Chart.js via CDN) e pode ser publicada no GitHub Pages.
-Recebe as séries temporais já calculadas por ponderacao.agregar_serie_temporal().
-"""
 import json
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 
-
-# Cores fixas por candidato (políticas/partidárias quando faz sentido)
 CORES_CANDIDATOS = {
-    "Lula": "#C0392B",      # vermelho (PT)
-    "Flávio": "#2471A3",    # azul (PL)
-    "Caiado": "#7D8A2E",    # verde-oliva (PSD)
-    "Zema": "#CA8A04",      # amarelo/âmbar (Novo)
-    "Renan": "#7E57C2",     # roxo (Missão)
-    "Cury": "#16A085",      # teal (Avante)
-    "Tarcísio": "#2C3E50",  # azul-escuro
-    "Haddad": "#E74C3C",    # vermelho-claro (PT)
-    "Ratinho Junior": "#27AE60",
-    "Eduardo Leite": "#8E44AD",
-    "Aldo": "#95A5A6",
-    "Daciolo": "#D35400",
-    "Samara": "#C0392B",
+    "Lula":   "#C0392B",
+    "Flávio": "#2471A3",
+    "Zema":   "#CA8A04",
+    "Caiado": "#7D8A2E",
+    "Renan":  "#7E57C2",
+    "Cury":   "#16A085",
 }
 COR_PADRAO = "#888780"
 
 
-def _to_date(v):
-    if isinstance(v, str):
-        return datetime.fromisoformat(v).date()
-    return v
+def _to_date(valor):
+    if isinstance(valor, date):
+        return valor
+    return date.fromisoformat(str(valor)[:10])
+
+
+def _formatar_ultimas_pesquisas(pesquisas):
+    if not pesquisas:
+        return ""
+    itens = []
+    for p in pesquisas[:10]:
+        inst  = p.get("instituto", "")
+        data  = p.get("data", "")
+        n     = p.get("amostra", "")
+        reg   = p.get("registro_tse", "")
+        try:
+            d = _to_date(data)
+            meses = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"]
+            data_fmt = f"{d.day} de {meses[d.month-1]}"
+        except Exception:
+            data_fmt = str(data)[:10]
+        try:
+            n_fmt = f"{int(float(n)):,}".replace(",",".")
+        except Exception:
+            n_fmt = str(n)
+        itens.append(f"<li><b>{inst}</b> ({data_fmt}, n={n_fmt}) <code>{reg}</code></li>")
+    return "\n".join(itens)
 
 
 def _preparar_dados_grafico(serie, top_n=5):
-    """Converte a série temporal no formato que o JavaScript do gráfico espera."""
     pontos = serie.get("pontos", [])
     if not pontos:
         return None
 
-    # Rótulos do eixo X: datas formatadas dd/mês
-    meses = ["jan", "fev", "mar", "abr", "mai", "jun",
-             "jul", "ago", "set", "out", "nov", "dez"]
+    meses = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"]
     labels = []
     for pt in pontos:
         d = _to_date(pt["data"])
-        labels.append(f"{d.day:02d}/{meses[d.month - 1]}")
+        labels.append(f"{d.day:02d}/{meses[d.month-1]}")
 
-    # Escolher top_n candidatos pela média mais recente com dados
     medias_recentes = {}
     for pt in reversed(pontos):
         if pt["n_pesquisas"] > 0:
             medias_recentes = pt["medias"]
             break
-    especiais = {"Outros", "Branco/Nulo", "Não sabe"}
+
+    especiais = {"Outros","Branco/Nulo","Não sabe"}
     candidatos = sorted(
         [c for c in serie["candidatos"] if c not in especiais],
         key=lambda c: medias_recentes.get(c, 0),
         reverse=True,
     )[:top_n]
 
-    # Montar séries de dados (linha ponderada)
     series_js = []
     for cand in candidatos:
         dados = []
@@ -68,70 +75,26 @@ def _preparar_dados_grafico(serie, top_n=5):
             v = pt["medias"].get(cand)
             dados.append(round(v, 1) if v else None)
         series_js.append({
-            "label": cand,
-            "cor": CORES_CANDIDATOS.get(cand, COR_PADRAO),
-            "dados": dados,
+            "label":   cand,
+            "cor":     CORES_CANDIDATOS.get(cand, COR_PADRAO),
+            "dados":   dados,
             "largura": 3.5 if cand in candidatos[:2] else 2,
         })
 
-    # Montar pontos brutos das pesquisas individuais
-    pesquisas_raw = []
-    passo = serie.get("passo_dias", 7)
-    data_inicio = _to_date(pontos[0]["data"])
-    vistas = set()  # evitar duplicatas (mesma pesquisa aparece em múltiplas janelas)
-
-    for pt in pontos:
-        data_pt = _to_date(pt["data"])
-        idx = round((data_pt - data_inicio).days / passo)
-        for pesq in pt.get("pesquisas", []):
-            # Chave única por pesquisa+candidato
-            reg  = pesq.get("registro_tse") or pesq.get("hash_unico", "")
-            inst = pesq.get("instituto", "")
-            data_pesq = str(pesq.get("data_fim_campo", ""))[:10]
-
-            for cand in candidatos:
-                chave = (reg, cand)
-                if chave in vistas:
-                    continue
-                # Candidatos podem estar em "resultados" (banco) ou diretamente (CSV)
-                resultados = pesq.get("resultados", {})
-                val = resultados.get(cand) if resultados else pesq.get(cand)
-                try:
-                    val = float(val)
-                except (TypeError, ValueError):
-                    continue
-                if val <= 0:
-                    continue
-                vistas.add(chave)
-                pesquisas_raw.append({
-                    "idx":  idx,
-                    "cand": cand,
-                    "val":  round(val, 1),
-                    "inst": inst,
-                    "data": data_pesq,
-                })
-
     return {
-        "labels":      labels,
-        "series":      series_js,
-        "passo_dias":  serie.get("passo_dias", 7),
-        "janela_dias": serie.get("janela_dias", 30),
+        "labels":     labels,
+        "series":     series_js,
+        "passo_dias": serie.get("passo_dias", 7),
+        "janela_dias":serie.get("janela_dias", 30),
     }
 
 
-def gerar_pagina_html(caminho, series_por_cenario, data_geracao=None, cenario_principal="1º Turno", ultimas_pesquisas=None, slopes=None):
-    """
-    Gera a página HTML com o gráfico de evolução.
-
-    series_por_cenario: dict {nome_cenario: serie_temporal}
-    cenario_principal: qual cenário mostrar no gráfico (default: 1º Turno)
-    ultimas_pesquisas: list de dicts com {instituto, data, amostra, registro_tse}
-    slopes: dict {candidato: slope_pp_por_semana} — pré-calculado no Python
-    """
+def gerar_pagina_html(caminho, series_por_cenario, data_geracao=None,
+                      cenario_principal="1º Turno", ultimas_pesquisas=None,
+                      slopes=None):
     if data_geracao is None:
         data_geracao = date.today()
 
-    # Pegar a série do cenário principal (ou a primeira disponível)
     serie = series_por_cenario.get(cenario_principal)
     if serie is None or not serie.get("pontos"):
         for nome, s in series_por_cenario.items():
@@ -149,17 +112,16 @@ def gerar_pagina_html(caminho, series_por_cenario, data_geracao=None, cenario_pr
             dados["slopes"] = slopes
         dados_json = json.dumps(dados, ensure_ascii=False)
 
-    meses_pt = ["janeiro", "fevereiro", "março", "abril", "maio", "junho",
-                "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"]
-    data_fmt = f"{data_geracao.day} de {meses_pt[data_geracao.month - 1]} de {data_geracao.year}"
+    meses_pt = ["janeiro","fevereiro","março","abril","maio","junho",
+                "julho","agosto","setembro","outubro","novembro","dezembro"]
+    data_fmt = f"{data_geracao.day} de {meses_pt[data_geracao.month-1]} de {data_geracao.year}"
 
-    # Formatar últimas pesquisas
     html_pesquisas = _formatar_ultimas_pesquisas(ultimas_pesquisas or [])
 
-    html = _TEMPLATE_HTML.replace("{{DADOS_JSON}}", dados_json)
-    html = html.replace("{{CENARIO}}", cenario_principal)
-    html = html.replace("{{DATA_GERACAO}}", data_fmt)
-    html = html.replace("{{ULTIMAS_PESQUISAS}}", html_pesquisas)
+    html = _TEMPLATE_HTML.replace("PLACEHOLDER_DADOS_JSON", dados_json)
+    html = html.replace("PLACEHOLDER_CENARIO", cenario_principal)
+    html = html.replace("PLACEHOLDER_DATA", data_fmt)
+    html = html.replace("PLACEHOLDER_PESQUISAS", html_pesquisas)
 
     Path(caminho).parent.mkdir(parents=True, exist_ok=True)
     with open(caminho, "w", encoding="utf-8") as f:
@@ -167,232 +129,187 @@ def gerar_pagina_html(caminho, series_por_cenario, data_geracao=None, cenario_pr
     return caminho
 
 
-def _formatar_ultimas_pesquisas(pesquisas):
-    """Formata as últimas pesquisas para exibição no rodapé."""
-    if not pesquisas:
-        return ""
-    
-    meses_pt = ["jan", "fev", "mar", "abr", "mai", "jun",
-                "jul", "ago", "set", "out", "nov", "dez"]
-    
-    linhas = []
-    for p in pesquisas[:10]:  # Mostrar últimas 10
-        instituto = p.get("instituto", "?")
-        data_str = p.get("data", "")
-        amostra = p.get("amostra", "?")
-        registro = p.get("registro_tse", "")
-        
-        # Formatar data
-        if data_str:
-            try:
-                d = _to_date(data_str)
-                data_fmt = f"{d.day} de {meses_pt[d.month - 1]}"
-            except:
-                data_fmt = data_str
-        else:
-            data_fmt = "?"
-        
-        # Montar linha
-        linha = f"<li><strong>{instituto}</strong> ({data_fmt}, n={amostra})"
-        if registro:
-            linha += f" <code>{registro}</code>"
-        linha += "</li>"
-        linhas.append(linha)
-    
-    if linhas:
-        return "<ul style='font-size:11px; color:#999; margin-top:4px; margin-bottom:0;'>" + \
-               "".join(linhas) + "</ul>"
-    return ""
-
-
-_TEMPLATE_HTML = r"""<!DOCTYPE html>
+_TEMPLATE_HTML = """<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Agregador de Pesquisas — Presidente 2026</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: #ffffff;
-    color: #1a1a1a;
-    line-height: 1.5;
-    padding: 24px;
-  }
-  .container { max-width: 860px; margin: 0 auto; }
-  h1 { font-size: 24px; font-weight: 600; margin-bottom: 4px; }
-  .subtitulo { font-size: 14px; color: #666; margin-bottom: 4px; }
-  .atualizado { font-size: 12px; color: #999; margin-bottom: 28px; }
-  .grafico-wrap { position: relative; width: 100%; height: 440px; margin-bottom: 16px; }
-  .legenda-tend {
-    font-size: 11px; color: #999; line-height: 1.7; margin-top: 8px;
-    border-top: 1px solid #eee; padding-top: 12px;
-  }
-  .rodape {
-    margin-top: 32px; padding-top: 16px; border-top: 1px solid #eee;
-    font-size: 12px; color: #999;
-  }
-  .sem-dados { color: #999; font-style: italic; padding: 40px 0; text-align: center; }
+  body { font-family: Arial, sans-serif; margin: 0; padding: 16px; background: #f9f9f9; color: #333; }
+  h1 { font-size: 1.3rem; margin-bottom: 4px; }
+  .sub { color: #666; font-size: 0.85rem; margin-bottom: 16px; }
+  .grafico-wrap { position: relative; width: 100%; height: 440px; margin-bottom: 16px; background: #fff; border-radius: 8px; padding: 8px; box-sizing: border-box; }
+  .sem-dados { display: flex; align-items: center; justify-content: center; height: 100%; color: #999; font-size: 1rem; }
+  .legenda-tend { font-size: 0.78rem; color: #555; margin-bottom: 12px; }
+  .rodape { font-size: 0.75rem; color: #888; border-top: 1px solid #ddd; padding-top: 10px; margin-top: 16px; }
+  .ultimas { font-size: 0.78rem; margin-bottom: 12px; }
+  .ultimas ul { margin: 4px 0; padding-left: 20px; }
+  .ultimas li { margin-bottom: 2px; }
+  details summary { cursor: pointer; font-weight: bold; font-size: 0.82rem; color: #555; }
+  code { background: #eee; padding: 1px 4px; border-radius: 3px; font-size: 0.75rem; }
 </style>
 </head>
 <body>
-<div class="container">
-  <h1>Intenção de voto — {{CENARIO}}</h1>
-  <div class="subtitulo">Média móvel ponderada · Eleições presidenciais 2026</div>
-  <div class="atualizado">Atualizado em {{DATA_GERACAO}}</div>
-
-  <div class="grafico-wrap">
-    <canvas id="grafico" role="img" aria-label="Gráfico de evolução da intenção de voto ao longo do tempo."></canvas>
-  </div>
-
-  <div class="legenda-tend" id="legenda-tend"></div>
-
-  <div class="rodape">
-    <p>Fonte: agregação própria de pesquisas registradas no TSE (Quaest, Datafolha, AtlasIntel, Futura, Meio/Ideia).
-    A seta indica a tendência nas últimas 4 semanas. Este é um agregador independente, sem fins comerciais.</p>
-    
-    <details style="margin-top: 12px;">
-      <summary style="cursor: pointer; color: #666; font-weight: 500;">
-        Últimas pesquisas consideradas →
-      </summary>
-      {{ULTIMAS_PESQUISAS}}
-    </details>
-  </div>
+<h1>Intenção de voto — PLACEHOLDER_CENARIO</h1>
+<div class="sub">Média ponderada por recência, amostra e metodologia · Eleições presidenciais 2026 · Atualizado em PLACEHOLDER_DATA</div>
+<div class="grafico-wrap">
+  <canvas id="grafico" role="img" aria-label="Gráfico de evolução da intenção de voto."></canvas>
+</div>
+<div class="legenda-tend" id="legenda-tend"></div>
+<div class="ultimas">
+  <details>
+    <summary>Últimas pesquisas consideradas →</summary>
+    <ul>PLACEHOLDER_PESQUISAS</ul>
+  </details>
+</div>
+<div class="rodape">
+  Fonte: agregação própria de pesquisas registradas no TSE. A seta indica a tendência por regressão linear ponderada nos últimos 60 dias. Agregador independente, sem fins comerciais.
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 (function(){
-  const DADOS = {{DADOS_JSON}};
-  const wrap = document.querySelector('.grafico-wrap');
-  const legendaEl = document.getElementById('legenda-tend');
+  var DADOS = PLACEHOLDER_DADOS_JSON;
+  var wrap = document.querySelector('.grafico-wrap');
+  var legendaEl = document.getElementById('legenda-tend');
 
   if (!DADOS) {
-    wrap.innerHTML = '<div class="sem-dados">Ainda não há dados suficientes para gerar o gráfico.</div>';
+    wrap.innerHTML = '<div class="sem-dados">Ainda não há dados suficientes.</div>';
     return;
   }
 
-  function seta(slopePerWeek){
-    // slope em pp/semana
-    if (slopePerWeek >  1.0) return {s:'\u21C8', cl:'#1D9E75'};
-    if (slopePerWeek >  0.3) return {s:'\u2191', cl:'#1D9E75'};
-    if (slopePerWeek >= -0.3)return {s:'\u2192', cl:'#888780'};
-    if (slopePerWeek >= -1.0)return {s:'\u2193', cl:'#D85A30'};
-    return {s:'\u21CA', cl:'#C0392B'};
+  function seta(s){
+    if (s > 1.0)  return {t:'\\u21C8', cor:'#1D9E75'};
+    if (s > 0.3)  return {t:'\\u2191', cor:'#1D9E75'};
+    if (s >= -0.3)return {t:'\\u2192', cor:'#888780'};
+    if (s >= -1.0)return {t:'\\u2193', cor:'#D85A30'};
+    return {t:'\\u21CA', cor:'#C0392B'};
   }
-  function lastIdx(a){ for(let i=a.length-1;i>=0;i--) if(a[i]!=null) return i; return -1; }
 
-  // Regressão linear ponderada — calcula inclinação em pp/semana
-  // Usa os últimos maxPontos pontos não-nulos, com peso decrescente por recência
-  function slopeRegPonderada(dados, labels, idxAtual, maxPontos){
-    const pts = [];
-    for(let i=idxAtual; i>=0 && pts.length<maxPontos; i--){
-      if(dados[i]==null) continue;
-      pts.push({x: i, y: dados[i]});
+  function lastIdx(a){
+    for(var i=a.length-1;i>=0;i--) if(a[i]!=null) return i;
+    return -1;
+  }
+
+  function slopeReg(dados, idxAtual, maxPts){
+    var pts = [];
+    for(var i=idxAtual; i>=0 && pts.length<maxPts; i--){
+      if(dados[i]!=null) pts.push({x:i, y:dados[i]});
     }
-    if(pts.length < 3) return 0;  // pontos demais faltando
-
-    // Peso = decaimento exponencial por posição (mais recente = mais peso)
-    const n = pts.length;
-    let sw=0, swx=0, swy=0, swxx=0, swxy=0;
-    pts.forEach((p, idx) => {
-      const w = Math.exp(-0.05 * idx);  // mais recente = idx 0 = peso 1
-      sw   += w;
-      swx  += w * p.x;
-      swy  += w * p.y;
-      swxx += w * p.x * p.x;
-      swxy += w * p.x * p.y;
+    if(pts.length < 3) return 0;
+    var sw=0,swx=0,swy=0,swxx=0,swxy=0;
+    pts.forEach(function(p,idx){
+      var w = Math.exp(-0.05*idx);
+      sw+=w; swx+=w*p.x; swy+=w*p.y; swxx+=w*p.x*p.x; swxy+=w*p.x*p.y;
     });
-    const denom = sw*swxx - swx*swx;
-    if(Math.abs(denom) < 1e-10) return 0;
-    const slope = (sw*swxy - swx*swy) / denom;
-    // Converter de pp/ponto para pp/semana
-    return slope * (7 / DADOS.passo_dias);
+    var den = sw*swxx - swx*swx;
+    if(Math.abs(den)<1e-10) return 0;
+    return (sw*swxy - swx*swy)/den * (7/DADOS.passo_dias);
   }
 
-  const datasets = DADOS.series.map(s => ({
-    label: s.label, data: s.dados,
-    borderColor: s.cor, backgroundColor: s.cor,
-    borderWidth: s.largura, tension: 0.4,
-    pointRadius: 0, pointHoverRadius: 4, spanGaps: true, fill: false
-  }));
+  var labels = DADOS.labels;
+  var datasets = DADOS.series.map(function(s){
+    return {
+      label: s.label,
+      data: s.dados,
+      borderColor: s.cor,
+      backgroundColor: s.cor+'22',
+      borderWidth: s.largura,
+      pointRadius: 0,
+      tension: 0.35,
+      spanGaps: true
+    };
+  });
 
-  // passo entre pontos = passo_dias; 4 semanas = 28 dias => back em nº de pontos
-  const passoPontos4sem = Math.max(1, Math.round(28 / DADOS.passo_dias));
-  const idxIni4 = labels.length - 1 - passoPontos4sem;
-
-  const faixa = {
+  var faixa = {
     id:'faixa',
-    beforeDatasetsDraw(chart){
-      const {ctx, chartArea:{top,bottom}, scales:{x}} = chart;
-      const x0=x.getPixelForValue(Math.max(0,idxIni4)), x1=x.getPixelForValue(labels.length-1);
+    beforeDraw: function(chart){
+      var ctx=chart.ctx, x=chart.scales.x, y=chart.scales.y;
+      var n=DADOS.labels.length, pts4=Math.max(1,Math.round(28/DADOS.passo_dias));
+      var x0=x.getPixelForValue(Math.max(0,n-pts4)), x1=x.getPixelForValue(n-1);
+      var top=chart.chartArea.top, bot=chart.chartArea.bottom;
       ctx.save();
-      ctx.fillStyle='rgba(136,135,128,0.10)'; ctx.fillRect(x0,top,x1-x0,bottom-top);
-      ctx.strokeStyle='rgba(136,135,128,0.25)'; ctx.setLineDash([3,3]);
-      ctx.beginPath(); ctx.moveTo(x0,top); ctx.lineTo(x0,bottom); ctx.stroke(); ctx.setLineDash([]);
-      ctx.font='500 10px sans-serif'; ctx.fillStyle='#888780'; ctx.textAlign='center';
-      ctx.fillText('últimas 4 semanas',(x0+x1)/2, top+12); ctx.restore();
+      ctx.fillStyle='rgba(200,200,200,0.15)';
+      ctx.fillRect(x0,top,x1-x0,bot-top);
+      ctx.fillStyle='#bbb'; ctx.font='11px Arial'; ctx.textAlign='center';
+      ctx.fillText('últimas 4 semanas',(x0+x1)/2,top+12);
+      ctx.restore();
     }
   };
-  const setasFlutuantes = {
+
+  var setasFlutuantes = {
     id:'setasFlutuantes',
-    afterDatasetsDraw(chart){
-      const {ctx, chartArea:{top}, scales:{x,y}} = chart;
-      const xUlt=x.getPixelForValue(labels.length-1);
+    afterDatasetsDraw: function(chart){
+      var ctx=chart.ctx, x=chart.scales.x, y=chart.scales.y;
+      var xUlt=x.getPixelForValue(DADOS.labels.length-1);
+      var usados=[];
       ctx.save(); ctx.textBaseline='middle';
-      const usadosSeta=[]; const usadosNome=[];
-      DADOS.series.forEach(s=>{
-        const i=lastIdx(s.dados); if(i<0) return;
-        const atual=s.dados[i];
-        let slope;
-        if (DADOS.slopes && DADOS.slopes[s.label] !== undefined) {
-          slope = DADOS.slopes[s.label];  // pré-calculado no Python
+      DADOS.series.forEach(function(s){
+        var i=lastIdx(s.dados); if(i<0) return;
+        var slope;
+        if(DADOS.slopes && DADOS.slopes[s.label]!==undefined){
+          slope=DADOS.slopes[s.label];
         } else {
-          const maxPontos = Math.max(6, Math.round(60 / DADOS.passo_dias));
-          slope = slopeRegPonderada(s.dados, labels, i, maxPontos);
+          slope=slopeReg(s.dados,i,Math.max(6,Math.round(60/DADOS.passo_dias)));
         }
-        const t=seta(slope);
-        const yLinha=y.getPixelForValue(atual);
-        let ySeta=yLinha-22; if(ySeta<top+8) ySeta=top+8;
-        usadosSeta.forEach(u=>{ if(Math.abs(u-ySeta)<18) ySeta=u-18; }); usadosSeta.push(ySeta);
-        ctx.beginPath(); ctx.arc(xUlt,yLinha,3,0,Math.PI*2); ctx.fillStyle=s.cor; ctx.fill();
-        ctx.font='500 18px sans-serif'; ctx.fillStyle=t.cl; ctx.textAlign='center';
-        ctx.fillText(t.s, xUlt, ySeta);
-        let yNome=yLinha;
-        usadosNome.forEach(u=>{ if(Math.abs(u-yNome)<17) yNome=u+17; }); usadosNome.push(yNome);
-        ctx.textAlign='left'; ctx.font='500 13px sans-serif'; ctx.fillStyle=s.cor;
-        ctx.fillText(s.label+'  '+atual.toFixed(1)+'%', xUlt+12, yNome);
+        var t=seta(slope);
+        var yLinha=y.getPixelForValue(s.dados[i]);
+        var yS=yLinha-22;
+        if(yS<chart.chartArea.top+8) yS=chart.chartArea.top+8;
+        usados.forEach(function(u){ if(Math.abs(u-yS)<18) yS=u-18; });
+        usados.push(yS);
+        ctx.beginPath(); ctx.arc(xUlt,yLinha,3,0,Math.PI*2);
+        ctx.fillStyle=s.cor; ctx.fill();
+        ctx.font='500 18px sans-serif'; ctx.fillStyle=t.cor; ctx.textAlign='center';
+        ctx.fillText(t.t, xUlt+18, yS);
+        ctx.font='bold 12px Arial'; ctx.fillStyle=s.cor;
+        ctx.fillText(s.dados[i].toFixed(1)+'%', xUlt+42, yS);
       });
       ctx.restore();
     }
   };
 
   new Chart(document.getElementById('grafico'),{
-    type:'line', data:{labels,datasets}, plugins:[faixa,setasFlutuantes],
-    options:{ responsive:true, maintainAspectRatio:false,
-      layout:{padding:{right:120,top:8}},
+    type:'line',
+    data:{labels:labels, datasets:datasets},
+    plugins:[faixa, setasFlutuantes],
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      layout:{padding:{right:80,top:8}},
       interaction:{mode:'index',intersect:false},
       scales:{
-        y:{min:0,max:52,ticks:{stepSize:10,callback:v=>v+'%',font:{size:12},color:'#888780'},
-           grid:{color:'rgba(136,135,128,0.15)',drawTicks:false},border:{display:false}},
-        x:{ticks:{font:{size:11},color:'#888780',maxRotation:0,autoSkip:true,maxTicksLimit:8},
-           grid:{display:false},border:{color:'rgba(136,135,128,0.3)'}}
+        x:{grid:{display:false}, ticks:{maxRotation:45,font:{size:10}}},
+        y:{min:20, max:60, ticks:{callback:function(v){return v+'%';}}}
       },
-      plugins:{legend:{display:false},
-        tooltip:{backgroundColor:'#2C2C2A',padding:10,cornerRadius:8,
-          callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y==null?'\u2014':c.parsed.y.toFixed(1)+'%')}}}
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            label:function(c){
+              return c.dataset.label+': '+(c.parsed.y==null?'—':c.parsed.y.toFixed(1)+'%');
+            }
+          }
+        }
+      }
     }
   });
 
-  legendaEl.innerHTML = 'A seta indica a <b style="font-weight:500;color:#666">tendência por regressão linear ponderada</b> nos últimos 60 dias: ' +
-    '<span style="color:#1D9E75">&#8648; forte alta</span> · ' +
-    '<span style="color:#1D9E75">&#8593; alta</span> · ' +
-    '<span style="color:#888780">&#8594; estável</span> · ' +
-    '<span style="color:#D85A30">&#8595; queda</span> · ' +
-    '<span style="color:#C0392B">&#8650; forte queda</span>';
+  if(legendaEl){
+    var parts = DADOS.series.map(function(s){
+      var i=lastIdx(s.dados); if(i<0) return '';
+      var slope = (DADOS.slopes && DADOS.slopes[s.label]!==undefined)
+        ? DADOS.slopes[s.label]
+        : slopeReg(s.dados,i,Math.max(6,Math.round(60/DADOS.passo_dias)));
+      var t=seta(slope);
+      return '<span style="color:'+s.cor+';font-weight:600">'+s.label+'</span> '+
+             '<span style="color:'+t.cor+'">'+t.t+'</span>';
+    }).filter(Boolean);
+    legendaEl.innerHTML = parts.join(' &nbsp;·&nbsp; ') +
+      ' &nbsp;<span style="color:#aaa;font-size:0.95em">(tendência 60 dias)</span>';
+  }
 })();
 </script>
 </body>
-</html>
-"""
+</html>"""
