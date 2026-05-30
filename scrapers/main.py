@@ -207,6 +207,48 @@ def main():
     slopes = calcular_slopes(series_por_cenario)
     print(f"   Slopes (pp/sem): {slopes}")
 
+    # Carregar pontos brutos do CSV para plotar no gráfico
+    def carregar_pontos_brutos(csv_path):
+        """Lê pesquisas_manuais.csv e retorna lista de pontos brutos
+        para plotagem no gráfico: {data, instituto, candidato, valor}"""
+        import csv as csvmod
+        pontos = []
+        try:
+            with open(csv_path, encoding="utf-8") as f:
+                for row in csvmod.DictReader(f):
+                    if str(row.get("turno","")).strip() != "1":
+                        continue
+                    if str(row.get("tipo","")).strip().lower() != "estimulado":
+                        continue
+                    data = str(row.get("data_fim_campo","")).strip()[:10]
+                    if not data:
+                        continue
+                    inst = str(row.get("instituto","")).strip()
+                    reg  = str(row.get("registro_tse","")).strip()
+                    for cand in ["Lula","Flávio","Zema","Caiado","Renan"]:
+                        val_str = str(row.get(cand,"")).strip()
+                        if not val_str or val_str in ("","nan"):
+                            continue
+                        try:
+                            val = float(val_str)
+                        except ValueError:
+                            continue
+                        if val <= 0:
+                            continue
+                        pontos.append({
+                            "data": data,
+                            "inst": inst,
+                            "cand": cand,
+                            "val":  round(val, 1),
+                            "reg":  reg,
+                        })
+        except Exception:
+            pass
+        return pontos
+
+    pontos_brutos = carregar_pontos_brutos(str(ROOT / "data/pesquisas_manuais.csv"))
+    print(f"   Pontos brutos para gráfico: {len(pontos_brutos)}")
+
     # Gerar página web (GitHub Pages) se houver séries temporais
     if series_por_cenario:
         print("\n[+] Gerando página web (docs/index.html)...")
@@ -219,6 +261,7 @@ def main():
             cenario_principal="1º Turno",
             ultimas_pesquisas=ultimas,
             slopes=slopes,
+            pontos_brutos=pontos_brutos,
         )
         print(f"    Página gerada: {caminho_html}")
 if __name__ == "__main__":
