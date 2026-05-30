@@ -203,8 +203,19 @@ def agregar_serie_temporal(
             p for p, dc in zip(pesquisas, datas_campo)
             if ini_janela <= dc <= data_ref
         ]
+    pontos = []
+    data_ref = data_inicio
+    ultimas_medias = {}  # propaga o último valor até hoje
+    while data_ref <= data_fim:
+        # Janela: pesquisas com data_fim_campo entre (data_ref - janela) e data_ref
+        ini_janela = data_ref - timedelta(days=janela_dias)
+        na_janela = [
+            p for p, dc in zip(pesquisas, datas_campo)
+            if ini_janela <= dc <= data_ref
+        ]
         if na_janela:
             ag = agregar(na_janela, pesos_institutos, config, data_referencia=data_ref)
+            ultimas_medias = ag["medias"]
             pontos.append({
                 "data":        data_ref,
                 "medias":      ag["medias"],
@@ -212,10 +223,10 @@ def agregar_serie_temporal(
                 "pesquisas":   na_janela,
             })
         else:
-            # Sem pesquisas na janela: ponto vazio (mantém continuidade do eixo)
+            # Sem pesquisas na janela: propagar último valor (linha não cai)
             pontos.append({
                 "data":        data_ref,
-                "medias":      {},
+                "medias":      ultimas_medias,
                 "n_pesquisas": 0,
                 "pesquisas":   [],
             })
