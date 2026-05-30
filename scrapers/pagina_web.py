@@ -136,10 +136,10 @@ _TEMPLATE_HTML = """<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Agregador de Pesquisas — Presidente 2026</title>
 <style>
-  body { font-family: Arial, sans-serif; margin: 0; padding: 16px; background: #f9f9f9; color: #333; }
+  body { font-family: Arial, sans-serif; margin: 0; padding: 16px; background: #f9f9f9; color: #333; max-width: 900px; margin: 0 auto; padding: 16px; }
   h1 { font-size: 1.3rem; margin-bottom: 4px; }
   .sub { color: #666; font-size: 0.85rem; margin-bottom: 16px; }
-  .grafico-wrap { position: relative; width: 100%; height: 440px; margin-bottom: 16px; background: #fff; border-radius: 8px; padding: 8px; box-sizing: border-box; }
+  .grafico-wrap { position: relative; width: 100%; height: 380px; margin-bottom: 16px; background: #fff; border-radius: 8px; padding: 8px; box-sizing: border-box; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
   .sem-dados { display: flex; align-items: center; justify-content: center; height: 100%; color: #999; font-size: 1rem; }
   .legenda-tend { font-size: 0.78rem; color: #555; margin-bottom: 12px; }
   .rodape { font-size: 0.75rem; color: #888; border-top: 1px solid #ddd; padding-top: 10px; margin-top: 16px; }
@@ -179,12 +179,12 @@ _TEMPLATE_HTML = """<!DOCTYPE html>
     return;
   }
 
-  function seta(s){
-    if (s > 1.0)  return {t:'\\u21C8', cor:'#1D9E75'};
-    if (s > 0.3)  return {t:'\\u2191', cor:'#1D9E75'};
-    if (s >= -0.3)return {t:'\\u2192', cor:'#888780'};
-    if (s >= -1.0)return {t:'\\u2193', cor:'#D85A30'};
-    return {t:'\\u21CA', cor:'#C0392B'};
+  function seta(delta){
+    if (delta > 2.0)  return {t:'\u21C8', cor:'#1D9E75'};
+    if (delta > 0.5)  return {t:'\u2191', cor:'#1D9E75'};
+    if (delta >= -0.5)return {t:'\u2192', cor:'#888780'};
+    if (delta >= -2.0)return {t:'\u2193', cor:'#D85A30'};
+    return {t:'\u21CA', cor:'#C0392B'};
   }
 
   function lastIdx(a){
@@ -192,20 +192,13 @@ _TEMPLATE_HTML = """<!DOCTYPE html>
     return -1;
   }
 
-  function slopeReg(dados, idxAtual, maxPts){
-    var pts = [];
-    for(var i=idxAtual; i>=0 && pts.length<maxPts; i--){
-      if(dados[i]!=null) pts.push({x:i, y:dados[i]});
+  // Valor de N pontos não-nulos atrás
+  function valAgo(dados, idx, n){
+    var count=0;
+    for(var i=idx-1;i>=0;i--){
+      if(dados[i]!=null){ count++; if(count>=n) return dados[i]; }
     }
-    if(pts.length < 3) return 0;
-    var sw=0,swx=0,swy=0,swxx=0,swxy=0;
-    pts.forEach(function(p,idx){
-      var w = Math.exp(-0.05*idx);
-      sw+=w; swx+=w*p.x; swy+=w*p.y; swxx+=w*p.x*p.x; swxy+=w*p.x*p.y;
-    });
-    var den = sw*swxx - swx*swx;
-    if(Math.abs(den)<1e-10) return 0;
-    return (sw*swxy - swx*swy)/den * (7/DADOS.passo_dias);
+    return dados[idx];
   }
 
   var labels = DADOS.labels;
@@ -247,13 +240,9 @@ _TEMPLATE_HTML = """<!DOCTYPE html>
       ctx.save(); ctx.textBaseline='middle';
       DADOS.series.forEach(function(s){
         var i=lastIdx(s.dados); if(i<0) return;
-        var slope;
-        if(DADOS.slopes && DADOS.slopes[s.label]!==undefined){
-          slope=DADOS.slopes[s.label];
-        } else {
-          slope=slopeReg(s.dados,i,Math.max(6,Math.round(60/DADOS.passo_dias)));
-        }
-        var t=seta(slope);
+        var pts4=Math.max(1,Math.round(28/DADOS.passo_dias));
+        var delta=s.dados[i] - valAgo(s.dados,i,pts4);
+        var t=seta(delta);
         var yLinha=y.getPixelForValue(s.dados[i]);
         var yS=yLinha-22;
         if(yS<chart.chartArea.top+8) yS=chart.chartArea.top+8;
@@ -299,15 +288,14 @@ _TEMPLATE_HTML = """<!DOCTYPE html>
   if(legendaEl){
     var parts = DADOS.series.map(function(s){
       var i=lastIdx(s.dados); if(i<0) return '';
-      var slope = (DADOS.slopes && DADOS.slopes[s.label]!==undefined)
-        ? DADOS.slopes[s.label]
-        : slopeReg(s.dados,i,Math.max(6,Math.round(60/DADOS.passo_dias)));
-      var t=seta(slope);
+      var pts4=Math.max(1,Math.round(28/DADOS.passo_dias));
+      var delta=s.dados[i] - valAgo(s.dados,i,pts4);
+      var t=seta(delta);
       return '<span style="color:'+s.cor+';font-weight:600">'+s.label+'</span> '+
              '<span style="color:'+t.cor+'">'+t.t+'</span>';
     }).filter(Boolean);
     legendaEl.innerHTML = parts.join(' &nbsp;·&nbsp; ') +
-      ' &nbsp;<span style="color:#aaa;font-size:0.95em">(tendência 60 dias)</span>';
+      ' &nbsp;<span style="color:#aaa;font-size:0.95em">(vs 4 semanas atrás)</span>';
   }
 })();
 </script>
