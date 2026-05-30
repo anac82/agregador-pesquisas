@@ -91,7 +91,7 @@ def _preparar_dados_grafico(serie, top_n=5):
 
 def gerar_pagina_html(caminho, series_por_cenario, data_geracao=None,
                       cenario_principal="1º Turno", ultimas_pesquisas=None,
-                      slopes=None):
+                      slopes=None, pontos_brutos=None):
     if data_geracao is None:
         data_geracao = date.today()
 
@@ -110,6 +110,39 @@ def gerar_pagina_html(caminho, series_por_cenario, data_geracao=None,
     else:
         if slopes:
             dados["slopes"] = slopes
+        # Converter pontos brutos: data ISO → índice no eixo X
+        if pontos_brutos and dados.get("labels"):
+            meses = {"jan":1,"fev":2,"mar":3,"abr":4,"mai":5,"jun":6,
+                     "jul":7,"ago":8,"set":9,"out":10,"nov":11,"dez":12}
+            def lbl_to_date(lbl):
+                d, m = lbl.split("/")
+                return date(2026, meses[m], int(d))
+            data_inicio = lbl_to_date(dados["labels"][0])
+            passo = dados["passo_dias"]
+            candidatos_validos = {s["label"] for s in dados["series"]}
+            raw = []
+            vistos = set()
+            for p in pontos_brutos:
+                if p["cand"] not in candidatos_validos:
+                    continue
+                chave = (p["reg"], p["cand"])
+                if chave in vistos:
+                    continue
+                vistos.add(chave)
+                try:
+                    dp = date.fromisoformat(p["data"])
+                    idx = round((dp - data_inicio).days / passo)
+                    if 0 <= idx < len(dados["labels"]):
+                        raw.append({
+                            "idx":  idx,
+                            "cand": p["cand"],
+                            "val":  p["val"],
+                            "inst": p["inst"],
+                            "data": p["data"],
+                        })
+                except Exception:
+                    continue
+            dados["raw"] = raw
         dados_json = json.dumps(dados, ensure_ascii=False)
 
     meses_pt = ["janeiro","fevereiro","março","abril","maio","junho",
@@ -202,6 +235,52 @@ _TEMPLATE_HTML = """<!DOCTYPE html>
   }
 
   var labels = DADOS.labels;
+
+  // Plugin: pontos brutos das pesquisas individuais
+  var pontosBrutos = {
+    id: 'pontosBrutos',
+    afterDatasetsDraw: function(chart) {
+      var raw = DADOS.raw;
+      if (!raw || !raw.length) return;
+      var ctx = chart.ctx, xs = chart.scales.x, ys = chart.scales.y;
+      var corPorCand = {};
+      DADOS.series.forEach(function(s){ corPorCand[s.label] = s.cor; });
+      ctx.save();
+      raw.forEach(function(p) {
+        var cor = corPorCand[p.cand];
+        if (!cor) return;
+        var px = xs.getPixelForValue(p.idx);
+        var py = ys.getPixelForValue(p.val);
+        ctx.beginPath();
+        ctx.arc(px, py, 4, 0, Math.PI * 2);
+        ctx.fillStyle = 'white';
+        ctx.fill();
+        ctx.strokeStyle = cor;
+        ctx.lineWidth = 1.8;
+        ctx.globalAlpha = 0.8;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      });
+      ctx.restore();
+    }
+  };
+
+  // Tooltip personalizado que mostra instituto ao passar sobre ponto bruto
+  var tooltipEl = null;
+  function mostrarTooltip(inst, val, cand, data, x, y) {
+    if (!tooltipEl) {
+      tooltipEl = document.createElement('div');
+      tooltipEl.style.cssText = 'position:fixed;background:#1A2B4A;color:#fff;padding:5px 9px;border-radius:5px;font-size:11px;pointer-events:none;z-index:100;white-space:nowrap;';
+      document.body.appendChild(tooltipEl);
+    }
+    tooltipEl.innerHTML = '<b>' + inst + '</b>: ' + val + '% (' + data + ')';
+    tooltipEl.style.display = 'block';
+    tooltipEl.style.left = (x + 14) + 'px';
+    tooltipEl.style.top  = (y - 10) + 'px';
+  }
+  function esconderTooltip() {
+    if (tooltipEl) tooltipEl.style.display = 'none';
+  }
   var datasets = DADOS.series.map(function(s){
     return {
       label: s.label,
@@ -259,10 +338,10 @@ _TEMPLATE_HTML = """<!DOCTYPE html>
     }
   };
 
-  new Chart(document.getElementById('grafico'),{
+  window._chartInst = new Chart(document.getElementById('grafico'),{
     type:'line',
     data:{labels:labels, datasets:datasets},
-    plugins:[faixa, setasFlutuantes],
+    plugins:[faixa, setasFlutuantes, pontosBrutos],
     options:{
       responsive:true,
       maintainAspectRatio:false,
@@ -296,6 +375,32 @@ _TEMPLATE_HTML = """<!DOCTYPE html>
     }).filter(Boolean);
     legendaEl.innerHTML = parts.join(' &nbsp;·&nbsp; ') +
       ' &nbsp;<span style="color:#aaa;font-size:0.95em">(vs 4 semanas atrás)</span>';
+  }
+
+  // Tooltip interativo nos pontos brutos
+  if (DADOS.raw && DADOS.raw.length) {
+    var canvas = document.getElementById('grafico');
+    canvas.addEventListener('mousemove', function(evt) {
+      var rect = canvas.getBoundingClientRect();
+      var mx = evt.clientX - rect.left;
+      var my = evt.clientY - rect.top;
+      var chart = window._chartInst;
+      if (!chart) return;
+      var xs = chart.scales.x, ys = chart.scales.y;
+      var encontrou = false;
+      for (var i = 0; i < DADOS.raw.length; i++) {
+        var p = DADOS.raw[i];
+        var px = xs.getPixelForValue(p.idx);
+        var py = ys.getPixelForValue(p.val);
+        if (Math.abs(px - mx) < 8 && Math.abs(py - my) < 8) {
+          mostrarTooltip(p.inst, p.val, p.cand, p.data, evt.clientX, evt.clientY);
+          encontrou = true;
+          break;
+        }
+      }
+      if (!encontrou) esconderTooltip();
+    });
+    canvas.addEventListener('mouseleave', esconderTooltip);
   }
 })();
 </script>
