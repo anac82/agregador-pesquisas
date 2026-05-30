@@ -186,6 +186,9 @@ def agregar_serie_temporal(
     if data_fim is None:
         data_fim = date.today()
 
+    # Garantir que data_fim é pelo menos hoje
+    data_fim = max(data_fim, date.today())
+
     # Descobrir todos os candidatos do conjunto inteiro (para colunas estáveis)
     candidatos_set = set()
     for p in pesquisas:
@@ -222,6 +225,30 @@ def agregar_serie_temporal(
                 "pesquisas":   [],
             })
         data_ref += timedelta(days=passo_dias)
+
+    # Garantir que o último ponto é hoje (caso o loop não tenha chegado)
+    hoje = date.today()
+    if pontos and _to_date(pontos[-1]["data"]) < hoje:
+        ini_janela = hoje - timedelta(days=janela_dias)
+        na_janela = [
+            p for p, dc in zip(pesquisas, datas_campo)
+            if ini_janela <= dc <= hoje
+        ]
+        if na_janela:
+            ag = agregar(na_janela, pesos_institutos, config, data_referencia=hoje)
+            pontos.append({
+                "data":        hoje,
+                "medias":      ag["medias"],
+                "n_pesquisas": ag["n_pesquisas"],
+                "pesquisas":   na_janela,
+            })
+        elif ultimas_medias:
+            pontos.append({
+                "data":        hoje,
+                "medias":      ultimas_medias,
+                "n_pesquisas": 0,
+                "pesquisas":   [],
+            })
 
     return {
         "pontos": pontos,
