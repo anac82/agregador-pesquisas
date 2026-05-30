@@ -196,15 +196,6 @@ def agregar_serie_temporal(
 
     pontos = []
     data_ref = data_inicio
-    while data_ref <= data_fim:
-        # Janela: pesquisas com data_fim_campo entre (data_ref - janela) e data_ref
-        ini_janela = data_ref - timedelta(days=janela_dias)
-        na_janela = [
-            p for p, dc in zip(pesquisas, datas_campo)
-            if ini_janela <= dc <= data_ref
-        ]
-    pontos = []
-    data_ref = data_inicio
     ultimas_medias = {}  # propaga o último valor até hoje
     while data_ref <= data_fim:
         # Janela: pesquisas com data_fim_campo entre (data_ref - janela) e data_ref
